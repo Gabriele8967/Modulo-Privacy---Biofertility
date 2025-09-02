@@ -1,0 +1,28 @@
+{
+  "name": "modulo-privacy-biofertility",
+  "version": "1.0.0",
+  "description": "Modulo privacy per Centro Biofertility - PMA",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "build": "echo 'Build completed - static files ready'",
+    "deploy": "netlify deploy --prod --dir ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/modulo-privacy-biofertility.git"
+  },
+  "keywords": [
+    "privacy",
+    "gdpr",
+    "medical",
+    "biofertility",
+    "pma"
+  ],
+  "author": "Centro Biofertility",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modulo Privacy - Centro Biofertility</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Centro Biofertility</h1>
+            <h2>Modulo Privacy per Procreazione Medicalmente Assistita</h2>
+        </header>
+
+        <form id="privacyForm">
+            <div class="form-section">
+                <h3>Dati del Paziente Principale</h3>
+                
+                <div class="form-group">
+                    <label for="nome">Nome *</label>
+                    <input type="text" id="nome" name="nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="cognome">Cognome *</label>
+                    <input type="text" id="cognome" name="cognome" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="luogoNascita">Luogo di Nascita *</label>
+                        <input type="text" id="luogoNascita" name="luogoNascita" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dataNascita">Data di Nascita *</label>
+                        <input type="date" id="dataNascita" name="dataNascita" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="professione">Professione *</label>
+                    <input type="text" id="professione" name="professione" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="indirizzo">Indirizzo di Residenza *</label>
+                    <input type="text" id="indirizzo" name="indirizzo" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="citta">Città di Residenza *</label>
+                        <input type="text" id="citta" name="citta" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cap">CAP *</label>
+                        <input type="text" id="cap" name="cap" pattern="[0-9]{5}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="codiceFiscale">Codice Fiscale *</label>
+                    <input type="text" id="codiceFiscale" name="codiceFiscale" pattern="[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numeroDocumento">Numero Documento Identità *</label>
+                        <input type="text" id="numeroDocumento" name="numeroDocumento" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="scadenzaDocumento">Scadenza Documento *</label>
+                        <input type="date" id="scadenzaDocumento" name="scadenzaDocumento" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="telefono">Recapito Telefonico *</label>
+                        <input type="tel" id="telefono" name="telefono" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailComunicazioni">Email per Ricevere Comunicazioni *</label>
+                    <input type="email" id="emailComunicazioni" name="emailComunicazioni" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="documentoFrente">Documento Identità - Fronte *</label>
+                    <input type="file" id="documentoFrente" name="documentoFrente" accept="image/*,.pdf" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="documentoRetro">Documento Identità - Retro *</label>
+                    <input type="file" id="documentoRetro" name="documentoRetro" accept="image/*,.pdf" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Dati del Partner (Opzionale)</h3>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="includePartner" name="includePartner">
+                    <label for="includePartner">Includi dati del partner</label>
+                </div>
+
+                <div id="partnerSection" class="partner-section" style="display: none;">
+                    <div class="form-group">
+                        <label for="nomePartner">Nome Partner</label>
+                        <input type="text" id="nomePartner" name="nomePartner">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cognomePartner">Cognome Partner</label>
+                        <input type="text" id="cognomePartner" name="cognomePartner">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="luogoNascitaPartner">Luogo di Nascita Partner</label>
+                            <input type="text" id="luogoNascitaPartner" name="luogoNascitaPartner">
+                        </div>
+                        <div class="form-group">
+                            <label for="dataNascitaPartner">Data di Nascita Partner</label>
+                            <input type="date" id="dataNascitaPartner" name="dataNascitaPartner">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="professionePartner">Professione Partner</label>
+                        <input type="text" id="professionePartner" name="professionePartner">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="indirizzoPartner">Indirizzo di Residenza Partner</label>
+                        <input type="text" id="indirizzoPartner" name="indirizzoPartner">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cittaPartner">Città di Residenza Partner</label>
+                            <input type="text" id="cittaPartner" name="cittaPartner">
+                        </div>
+                        <div class="form-group">
+                            <label for="capPartner">CAP Partner</label>
+                            <input type="text" id="capPartner" name="capPartner" pattern="[0-9]{5}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="codiceFiscalePartner">Codice Fiscale Partner</label>
+                        <input type="text" id="codiceFiscalePartner" name="codiceFiscalePartner" pattern="[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="numeroDocumentoPartner">Numero Documento Identità Partner</label>
+                            <input type="text" id="numeroDocumentoPartner" name="numeroDocumentoPartner">
+                        </div>
+                        <div class="form-group">
+                            <label for="scadenzaDocumentoPartner">Scadenza Documento Partner</label>
+                            <input type="date" id="scadenzaDocumentoPartner" name="scadenzaDocumentoPartner">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="telefonoPartner">Recapito Telefonico Partner</label>
+                            <input type="tel" id="telefonoPartner" name="telefonoPartner">
+                        </div>
+                        <div class="form-group">
+                            <label for="emailPartner">Email Partner</label>
+                            <input type="email" id="emailPartner" name="emailPartner">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="documentoFrentePartner">Documento Identità Partner - Fronte</label>
+                        <input type="file" id="documentoFrentePartner" name="documentoFrentePartner" accept="image/*,.pdf">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="documentoRetroPartner">Documento Identità Partner - Retro</label>
+                        <input type="file" id="documentoRetroPartner" name="documentoRetroPartner" accept="image/*,.pdf">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Privacy e GDPR</h3>
+                <div class="privacy-info">
+                    <p><strong>Informativa GDPR:</strong></p>
+                    <p>I tuoi dati personali saranno trattati esclusivamente per le finalità mediche indicate nel modulo di consenso. Non verranno salvati sui nostri server ma solo inviati tramite email sicura al centro medico. Hai diritto di accesso, rettifica, cancellazione e portabilità dei tuoi dati secondo il Regolamento UE 2016/679.</p>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gdprConsent" name="gdprConsent" required>
+                    <label for="gdprConsent">Accetto il trattamento dei dati personali secondo l'informativa GDPR *</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
+                    <label for="privacyConsent">Presto il consenso per il trattamento dei dati personali e sensibili come descritto nel modulo *</label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" id="submitBtn">Genera e Invia Modulo Privacy</button>
+            </div>
+        </form>
+
+        <div id="loading" class="loading" style="display: none;">
+            <p>Generazione PDF in corso...</p>
+        </div>
+
+        <div id="success" class="success-message" style="display: none;">
+            <p>Modulo inviato con successo!</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
