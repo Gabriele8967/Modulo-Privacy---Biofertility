@@ -1,5 +1,4 @@
-// Inizializzazione EmailJS
-emailjs.init("YOUR_EMAILJS_USER_ID"); // Sostituire con il vostro User ID di EmailJS
+// Configurazione per Netlify Functions
 
 // Gestione visibilità sezione partner
 document.getElementById('includePartner').addEventListener('change', function() {
@@ -323,25 +322,37 @@ document.getElementById('privacyForm').addEventListener('submit', async function
             }
         }
         
-        // Prepara parametri per EmailJS
-        const emailParams = {
-            to_email: 'centrimanna2@gmail.com',
-            from_name: `${data.nome} ${data.cognome}`,
-            from_email: data.email,
-            subject: 'Nuovo Modulo Privacy - Centro Biofertility',
-            message: `Nuovo modulo privacy compilato da ${data.nome} ${data.cognome}`,
-            patient_data: JSON.stringify(data),
-            pdf_attachment: btoa(pdf.output()),
-            documento_fronte: documentiFronteB64.split(',')[1] || '',
-            documento_retro: documentiRetroB64.split(',')[1] || '',
-            documento_fronte_partner: documentoFrentePartnerB64.split(',')[1] || '',
-            documento_retro_partner: documentoRetroPartnerB64.split(',')[1] || '',
-            timestamp: new Date().toISOString(),
-            ip_address: userIP
+        // Prepara dati per Netlify Function
+        const functionData = {
+            ...data,
+            pdfBase64: btoa(pdf.output()),
+            documentoFrente: documentiFronteB64.split(',')[1] || '',
+            documentoRetro: documentiRetroB64.split(',')[1] || '',
+            documentoFrenteExt: documentoFrente ? documentoFrente.name.split('.').pop() : '',
+            documentoRetroExt: documentoRetro ? documentoRetro.name.split('.').pop() : '',
+            documentoFrentePartner: documentoFrentePartnerB64.split(',')[1] || '',
+            documentoRetroPartner: documentoRetroPartnerB64.split(',')[1] || '',
+            documentoFrentePartnerExt: data.includePartner && document.getElementById('documentoFrentePartner').files[0] ? 
+                document.getElementById('documentoFrentePartner').files[0].name.split('.').pop() : '',
+            documentoRetroPartnerExt: data.includePartner && document.getElementById('documentoRetroPartner').files[0] ? 
+                document.getElementById('documentoRetroPartner').files[0].name.split('.').pop() : '',
+            timestamp: new Date().toLocaleString('it-IT'),
+            ipAddress: userIP,
+            userAgent: navigator.userAgent
         };
         
-        // Invia email tramite EmailJS
-        await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', emailParams);
+        // Invia tramite Netlify Function
+        const response = await fetch('/.netlify/functions/send-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(functionData)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Errore nell\'invio dell\'email');
+        }
         
         loading.style.display = 'none';
         success.style.display = 'block';

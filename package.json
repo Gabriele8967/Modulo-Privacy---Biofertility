@@ -22,7 +22,11 @@
   "author": "Centro Biofertility",
   "license": "UNLICENSED",
   "private": true,
+  "dependencies": {
+    "nodemailer": "^6.9.8"
+  },
   "devDependencies": {
-    "serve": "^14.2.1"
+    "serve": "^14.2.1",
+    "netlify-cli": "^17.15.4"
   }
 }
