@@ -123,6 +123,10 @@ input[type="checkbox"] {
     margin-top: 4px;
     transform: scale(1.2);
     accent-color: #3498db;
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
 }
 
 .checkbox-group label {
