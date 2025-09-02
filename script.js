@@ -65,7 +65,12 @@ function validateForm() {
     document.querySelectorAll('.error').forEach(input => input.classList.remove('error'));
     
     requiredFields.forEach(field => {
-        if (!field.value.trim()) {
+        if (field.type === 'checkbox') {
+            if (!field.checked) {
+                showFieldError(field, 'Consenso obbligatorio');
+                isValid = false;
+            }
+        } else if (!field.value.trim()) {
             showFieldError(field, 'Campo obbligatorio');
             isValid = false;
         }
