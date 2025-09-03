@@ -1,20 +1,5 @@
 // Configurazione per Netlify Functions
 
-// Debug checkbox al caricamento pagina
-document.addEventListener('DOMContentLoaded', function() {
-    const gdprCheckbox = document.getElementById('gdprConsent');
-    const privacyCheckbox = document.getElementById('privacyConsent');
-    
-    console.log('GDPR Checkbox:', gdprCheckbox ? 'TROVATO' : 'NON TROVATO');
-    console.log('Privacy Checkbox:', privacyCheckbox ? 'TROVATO' : 'NON TROVATO');
-    
-    if (gdprCheckbox) {
-        console.log('GDPR styles:', window.getComputedStyle(gdprCheckbox));
-    }
-    if (privacyCheckbox) {
-        console.log('Privacy styles:', window.getComputedStyle(privacyCheckbox));
-    }
-});
 
 
 // Gestione visibilità sezione partner
@@ -170,256 +155,313 @@ function showFieldError(field, message) {
 // Generazione PDF
 async function generatePDF(formData, userIP) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
     
-    let yPosition = 15;
+    const pageWidth = 210;
+    const margin = 15;
+    const contentWidth = pageWidth - (margin * 2);
+    let yPosition = 20;
     
-    // Header principale
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PRESTAZIONE DEL CONSENSO PER IL TRATTAMENTO DEI DATI PERSONALI E SENSIBILI', 105, yPosition, { align: 'center' });
-    yPosition += 7;
-    doc.text('PER I PAZIENTI DEL CENTRO DI PROCREAZIONE MEDICALMENTE ASSISTITA BIOFERTILITY', 105, yPosition, { align: 'center' });
+    // === INTESTAZIONE ===
+    doc.setFontSize(16);
+    doc.setFont('times', 'bold');
+    doc.text('PRESTAZIONE DEL CONSENSO PER IL TRATTAMENTO', pageWidth/2, yPosition, { align: 'center' });
+    yPosition += 6;
+    doc.text('DEI DATI PERSONALI E SENSIBILI PER I PAZIENTI DEL', pageWidth/2, yPosition, { align: 'center' });
+    yPosition += 6;
+    doc.text('CENTRO DI PROCREAZIONE MEDICALMENTE ASSISTITA', pageWidth/2, yPosition, { align: 'center' });
+    yPosition += 6;
+    doc.text('BIOFERTILITY', pageWidth/2, yPosition, { align: 'center' });
     yPosition += 15;
     
-    // === SEZIONE DATI PAZIENTI ===
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DATI PAZIENTE PRINCIPALE', 10, yPosition);
+    // Linea separatrice
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 10;
+    
+    // === DATI PAZIENTE PRINCIPALE ===
+    doc.setFontSize(14);
+    doc.setFont('times', 'bold');
+    doc.text('DATI PAZIENTE PRINCIPALE', margin, yPosition);
     yPosition += 8;
     
-    // Tabella dati paziente
+    // Tabella dati paziente con bordi
+    const tableStartY = yPosition;
+    const rowHeight = 8;
+    const col1Width = 45;
+    const col2Width = 60;
+    const col3Width = 40;
+    const col4Width = 45;
+    
+    // Header tabella
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    const leftCol = 10;
-    const rightCol = 105;
-    const lineHeight = 7;
+    doc.setFont('times', 'bold');
+    doc.rect(margin, yPosition, contentWidth, rowHeight);
+    doc.text('CAMPO', margin + 2, yPosition + 6);
+    doc.text('VALORE', margin + col1Width + 2, yPosition + 6);
+    doc.text('CAMPO', margin + col1Width + col2Width + 2, yPosition + 6);
+    doc.text('VALORE', margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+    yPosition += rowHeight;
+    
+    doc.setFont('times', 'normal');
     
     // Riga 1
-    doc.setFont('helvetica', 'bold');
-    doc.text('Nome e Cognome:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${formData.nome} ${formData.cognome}`, leftCol + 35, yPosition);
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Data di Nascita:', rightCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.dataNascita, rightCol + 32, yPosition);
-    yPosition += lineHeight;
+    doc.text('Nome e Cognome', margin + 2, yPosition + 6);
+    doc.text(`${formData.nome} ${formData.cognome}`, margin + col1Width + 2, yPosition + 6);
+    doc.text('Data Nascita', margin + col1Width + col2Width + 2, yPosition + 6);
+    doc.text(formData.dataNascita, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
     // Riga 2
-    doc.setFont('helvetica', 'bold');
-    doc.text('Luogo di Nascita:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.luogoNascita, leftCol + 35, yPosition);
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Professione:', rightCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.professione, rightCol + 25, yPosition);
-    yPosition += lineHeight;
+    doc.text('Luogo Nascita', margin + 2, yPosition + 6);
+    doc.text(formData.luogoNascita, margin + col1Width + 2, yPosition + 6);
+    doc.text('Professione', margin + col1Width + col2Width + 2, yPosition + 6);
+    doc.text(formData.professione, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
-    // Riga 3
-    doc.setFont('helvetica', 'bold');
-    doc.text('Indirizzo:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`${formData.indirizzo}, ${formData.citta} ${formData.cap}`, leftCol + 22, yPosition);
-    yPosition += lineHeight;
+    // Riga 3 - Indirizzo completo
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
+    
+    doc.text('Indirizzo Completo', margin + 2, yPosition + 6);
+    doc.text(`${formData.indirizzo}, ${formData.citta} ${formData.cap}`, margin + col1Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
     // Riga 4
-    doc.setFont('helvetica', 'bold');
-    doc.text('Codice Fiscale:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.codiceFiscale, leftCol + 30, yPosition);
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Telefono:', rightCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.telefono, rightCol + 20, yPosition);
-    yPosition += lineHeight;
+    doc.text('Codice Fiscale', margin + 2, yPosition + 6);
+    doc.text(formData.codiceFiscale, margin + col1Width + 2, yPosition + 6);
+    doc.text('Telefono', margin + col1Width + col2Width + 2, yPosition + 6);
+    doc.text(formData.telefono, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
     // Riga 5
-    doc.setFont('helvetica', 'bold');
-    doc.text('Documento N.:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.numeroDocumento, leftCol + 28, yPosition);
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
+    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Scadenza:', rightCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.scadenzaDocumento, rightCol + 22, yPosition);
-    yPosition += lineHeight;
+    doc.text('Documento N.', margin + 2, yPosition + 6);
+    doc.text(formData.numeroDocumento, margin + col1Width + 2, yPosition + 6);
+    doc.text('Scadenza', margin + col1Width + col2Width + 2, yPosition + 6);
+    doc.text(formData.scadenzaDocumento, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
-    // Riga 6
-    doc.setFont('helvetica', 'bold');
-    doc.text('Email:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.email, leftCol + 15, yPosition);
-    yPosition += lineHeight;
+    // Riga 6 - Email
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
     
-    // Riga 7
-    doc.setFont('helvetica', 'bold');
-    doc.text('Email Comunicazioni:', leftCol, yPosition);
-    doc.setFont('helvetica', 'normal');
-    doc.text(formData.emailComunicazioni, leftCol + 40, yPosition);
-    yPosition += 12;
+    doc.text('Email', margin + 2, yPosition + 6);
+    doc.text(formData.email, margin + col1Width + 2, yPosition + 6);
+    yPosition += rowHeight;
     
-    // Dati partner se presenti
+    // Riga 7 - Email Comunicazioni
+    doc.rect(margin, yPosition, col1Width, rowHeight);
+    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
+    
+    doc.text('Email Comunicazioni', margin + 2, yPosition + 6);
+    doc.text(formData.emailComunicazioni, margin + col1Width + 2, yPosition + 6);
+    yPosition += 15;
+    
+    // === DATI PARTNER SE PRESENTI ===
     if (formData.includePartner && formData.nomePartner) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('DATI PARTNER', 10, yPosition);
+        doc.setFontSize(14);
+        doc.setFont('times', 'bold');
+        doc.text('DATI PARTNER', margin, yPosition);
         yPosition += 8;
         
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont('times', 'normal');
         
-        // Tabella partner
-        doc.setFont('helvetica', 'bold');
-        doc.text('Nome e Cognome:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formData.nomePartner} ${formData.cognomePartner}`, leftCol + 35, yPosition);
+        // Header tabella partner
+        doc.setFont('times', 'bold');
+        doc.rect(margin, yPosition, contentWidth, rowHeight);
+        doc.text('CAMPO', margin + 2, yPosition + 6);
+        doc.text('VALORE', margin + col1Width + 2, yPosition + 6);
+        doc.text('CAMPO', margin + col1Width + col2Width + 2, yPosition + 6);
+        doc.text('VALORE', margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+        yPosition += rowHeight;
         
-        doc.setFont('helvetica', 'bold');
-        doc.text('Data di Nascita:', rightCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.dataNascitaPartner, rightCol + 32, yPosition);
-        yPosition += lineHeight;
+        doc.setFont('times', 'normal');
         
-        doc.setFont('helvetica', 'bold');
-        doc.text('Luogo di Nascita:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.luogoNascitaPartner, leftCol + 35, yPosition);
+        // Dati partner con stesso formato
+        const partnerData = [
+            ['Nome e Cognome', `${formData.nomePartner} ${formData.cognomePartner}`, 'Data Nascita', formData.dataNascitaPartner],
+            ['Luogo Nascita', formData.luogoNascitaPartner, 'Professione', formData.professionePartner],
+            ['Indirizzo', `${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner}`, '', ''],
+            ['Codice Fiscale', formData.codiceFiscalePartner, 'Telefono', formData.telefonoPartner],
+            ['Documento N.', formData.numeroDocumentoPartner, 'Scadenza', formData.scadenzaDocumentoPartner],
+            ['Email', formData.emailPartner, '', '']
+        ];
         
-        doc.setFont('helvetica', 'bold');
-        doc.text('Professione:', rightCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.professionePartner, rightCol + 25, yPosition);
-        yPosition += lineHeight;
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Indirizzo:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner}`, leftCol + 22, yPosition);
-        yPosition += lineHeight;
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Codice Fiscale:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.codiceFiscalePartner, leftCol + 30, yPosition);
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Telefono:', rightCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.telefonoPartner, rightCol + 20, yPosition);
-        yPosition += lineHeight;
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Documento N.:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.numeroDocumentoPartner, leftCol + 28, yPosition);
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Scadenza:', rightCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.scadenzaDocumentoPartner, rightCol + 22, yPosition);
-        yPosition += lineHeight;
-        
-        doc.setFont('helvetica', 'bold');
-        doc.text('Email:', leftCol, yPosition);
-        doc.setFont('helvetica', 'normal');
-        doc.text(formData.emailPartner, leftCol + 15, yPosition);
-        yPosition += 12;
+        partnerData.forEach(row => {
+            if (row[0] === 'Indirizzo' || row[0] === 'Email') {
+                doc.rect(margin, yPosition, col1Width, rowHeight);
+                doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
+                doc.text(row[0], margin + 2, yPosition + 6);
+                doc.text(row[1], margin + col1Width + 2, yPosition + 6);
+            } else {
+                doc.rect(margin, yPosition, col1Width, rowHeight);
+                doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
+                doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
+                doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
+                doc.text(row[0], margin + 2, yPosition + 6);
+                doc.text(row[1], margin + col1Width + 2, yPosition + 6);
+                if (row[2]) doc.text(row[2], margin + col1Width + col2Width + 2, yPosition + 6);
+                if (row[3]) doc.text(row[3], margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
+            }
+            yPosition += rowHeight;
+        });
+        yPosition += 10;
     }
     
-    // === SEZIONE CONSENSO ===
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
+    // === DICHIARAZIONE CONSENSO ===
+    if (yPosition > 240) {
+        doc.addPage();
+        yPosition = 20;
+    }
     
-    const consentText = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}${formData.includePartner ? ` e ${formData.nomePartner} ${formData.cognomePartner}` : ''}, pienamente consapevole della importanza della presente dichiarazione, dichiara di essere stato esaustivamente e chiaramente informato su:
-
-• le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;
-
-• i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;
-
-• il diritto di accesso ai dati personali, la facoltà di chiederne l'aggiornamento, la rettifica, l'integrazione e la cancellazione e/o la limitazione nell'utilizzo degli stessi;
-
-• il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;
-
-• la necessità di fornire dati richiesti per poter ottenere l'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.
-
-Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}
-
+    doc.setFontSize(12);
+    doc.setFont('times', 'bold');
+    doc.text('DICHIARAZIONE DI CONSENSO', margin, yPosition);
+    yPosition += 10;
+    
+    doc.setFontSize(11);
+    doc.setFont('times', 'normal');
+    
+    const consentTextFinal = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}${formData.includePartner ? ` e ${formData.nomePartner} ${formData.cognomePartner}` : ''}, pienamente consapevole della importanza della presente dichiarazione, dichiara di essere stato esaustivamente e chiaramente informato su:`;
+    
+    let consentLines = doc.splitTextToSize(consentTextFinal, contentWidth);
+    consentLines.forEach(line => {
+        doc.text(line, margin, yPosition);
+        yPosition += 6;
+    });
+    yPosition += 5;
+    
+    // Elenco puntato informazioni
+    const infoPoints = [
+        'le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;',
+        'i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;',
+        'il diritto di accesso ai dati personali, la facoltà di chiederne l\'aggiornamento, la rettifica, l\'integrazione e la cancellazione e/o la limitazione nell\'utilizzo degli stessi;',
+        'il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;',
+        'la necessità di fornire dati richiesti per poter ottenere l\'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.'
+    ];
+    
+    infoPoints.forEach(point => {
+        const pointLines = doc.splitTextToSize(`• ${point}`, contentWidth - 5);
+        pointLines.forEach((line, index) => {
+            if (yPosition > 270) {
+                doc.addPage();
+                yPosition = 20;
+            }
+            doc.text(line, margin + (index === 0 ? 0 : 5), yPosition);
+            yPosition += 5;
+        });
+        yPosition += 2;
+    });
+    
+    yPosition += 5;
+    
+    // Dichiarazione email
+    const emailDeclaration = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}
+    
 A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail.
 
 Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
     
-    const consentLines = doc.splitTextToSize(consentText, 190);
-    consentLines.forEach(line => {
+    const emailLines = doc.splitTextToSize(emailDeclaration, contentWidth);
+    emailLines.forEach(line => {
         if (yPosition > 270) {
             doc.addPage();
-            yPosition = 15;
+            yPosition = 20;
         }
-        doc.text(line, 10, yPosition);
+        doc.text(line, margin, yPosition);
         yPosition += 5;
     });
     
     yPosition += 10;
     
-    // Responsabile trattamento
-    if (yPosition > 260) {
+    // === FIRMA E DATA ===
+    if (yPosition > 250) {
         doc.addPage();
-        yPosition = 15;
+        yPosition = 20;
     }
     
-    doc.setFont('helvetica', 'bold');
-    doc.text('Dr Claudio Manna, Responsabile trattamento dei dati medesimi.', 10, yPosition);
+    doc.setFont('times', 'bold');
+    doc.text('Dr Claudio Manna', margin, yPosition);
+    doc.setFont('times', 'normal');
+    doc.text('Responsabile trattamento dei dati', margin, yPosition + 6);
     yPosition += 15;
     
-    // Data compilazione
+    // Data
     const now = new Date();
     const timestamp = now.toLocaleString('it-IT', {
-        year: 'numeric',
-        month: '2-digit',
         day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        minute: '2-digit'
     });
     
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Data: ${timestamp}`, 10, yPosition);
+    doc.setFont('times', 'bold');
+    doc.text(`Data: ${timestamp}`, margin, yPosition);
     yPosition += 15;
     
-    // === SEZIONE VALIDITÀ LEGALE ===
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VALIDITÀ LEGALE DIGITALE:', 10, yPosition);
+    // === VALIDITÀ LEGALE ===
+    doc.setFontSize(10);
+    doc.setFont('times', 'bold');
+    doc.text('VALIDITÀ LEGALE DIGITALE', margin, yPosition);
     yPosition += 6;
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Compilato il: ${timestamp}`, 10, yPosition);
+    
+    doc.setFont('times', 'normal');
+    doc.setFontSize(9);
+    doc.text(`Modulo compilato digitalmente il: ${timestamp}`, margin, yPosition);
     yPosition += 4;
-    doc.text(`Indirizzo IP: ${userIP}`, 10, yPosition);
+    doc.text(`Indirizzo IP di compilazione: ${userIP}`, margin, yPosition);
     yPosition += 8;
     
     // Note legali
+    doc.setFont('times', 'italic');
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text('NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.', 10, yPosition);
-    yPosition += 10;
+    const noteText = 'NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.';
+    const noteLines = doc.splitTextToSize(noteText, contentWidth);
+    noteLines.forEach(line => {
+        doc.text(line, margin, yPosition);
+        yPosition += 4;
+    });
+    yPosition += 8;
     
-    // Footer centro
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Centro Biofertility - Junior s.r.l.', 10, yPosition);
-    yPosition += 5;
-    doc.setFont('helvetica', 'normal');
+    // === FOOTER CENTRO ===
+    doc.setLineWidth(0.3);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 6;
+    
+    doc.setFontSize(11);
+    doc.setFont('times', 'bold');
+    doc.text('Centro Biofertility - Junior s.r.l.', margin, yPosition);
+    yPosition += 6;
+    
+    doc.setFont('times', 'normal');
     doc.setFontSize(9);
-    doc.text('Sede operativa: Viale degli Eroi di Rodi 214, 00128-Roma Tel 06-5083375 Fax 06-5083375', 10, yPosition);
+    doc.text('Sede operativa: Viale degli Eroi di Rodi 214, 00128-Roma', margin, yPosition);
     yPosition += 4;
-    doc.text('E-mail: centrimanna2@gmail.com', 10, yPosition);
+    doc.text('Tel: 06-5083375 | Fax: 06-5083375 | E-mail: centrimanna2@gmail.com', margin, yPosition);
     yPosition += 4;
-    doc.text('Sede legale: Via Velletri 7, 00198 Roma Tel 06-8415269 E-mail centrimanna2@gmail.com', 10, yPosition);
+    doc.text('Sede legale: Via Velletri 7, 00198 Roma | Tel: 06-8415269', margin, yPosition);
     
     return doc;
 }

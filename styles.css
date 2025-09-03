@@ -141,6 +141,9 @@ input[type="checkbox"] {
     width: 18px !important;
     height: 18px !important;
     margin-right: 8px !important;
+    appearance: checkbox !important;
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
 }
 
 .checkbox-group label {
