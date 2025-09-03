@@ -143,78 +143,194 @@ async function generatePDF(formData, userIP) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
-    // Header
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('CENTRO BIOFERTILITY', 105, 20, { align: 'center' });
+    let yPosition = 15;
+    
+    // Header principale
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PRESTAZIONE DEL CONSENSO PER IL TRATTAMENTO DEI DATI PERSONALI E SENSIBILI', 105, yPosition, { align: 'center' });
+    yPosition += 7;
+    doc.text('PER I PAZIENTI DEL CENTRO DI PROCREAZIONE MEDICALMENTE ASSISTITA BIOFERTILITY', 105, yPosition, { align: 'center' });
+    yPosition += 15;
+    
+    // === SEZIONE DATI PAZIENTI ===
     doc.setFontSize(12);
-    doc.text('PRESTAZIONE DEL CONSENSO PER IL TRATTAMENTO DEI DATI PERSONALI', 105, 30, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.text('DATI PAZIENTE PRINCIPALE', 10, yPosition);
+    yPosition += 8;
     
-    let yPosition = 50;
-    doc.setFont(undefined, 'normal');
+    // Tabella dati paziente
     doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const leftCol = 10;
+    const rightCol = 105;
+    const lineHeight = 7;
     
-    // Testo del consenso completo dal file
-    const consentText = `PRESTAZIONE DEL CONSENSO PER IL TRATTAMENTO DEI DATI PERSONALI E SENSIBILI PER I PAZIENTI DEL CENTRO DI PROCREAZIONE MEDICALMENTE ASSISTITA BIOFERTILITY
-
-dichiara di essere stato esaustivamente e chiaramente informato su:
-le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;
-i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;
-il diritto di accesso ai dati personali, la facoltà di chiederne l'aggiornamento, la rettifica, l'integrazione e la cancellazione e/o la limitazione nell' utilizzo degli stessi; 
-il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;
-la necessità di fornire dati richiesti per poter ottenere l'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.`;
+    // Riga 1
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nome e Cognome:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${formData.nome} ${formData.cognome}`, leftCol + 35, yPosition);
     
-    const lines = doc.splitTextToSize(consentText, 190);
-    lines.forEach(line => {
-        doc.text(line, 10, yPosition);
-        yPosition += 5;
-    });
+    doc.setFont('helvetica', 'bold');
+    doc.text('Data di Nascita:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.dataNascita, rightCol + 32, yPosition);
+    yPosition += lineHeight;
     
-    yPosition += 10;
+    // Riga 2
+    doc.setFont('helvetica', 'bold');
+    doc.text('Luogo di Nascita:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.luogoNascita, leftCol + 35, yPosition);
     
-    // Dati paziente principale
-    doc.setFont(undefined, 'bold');
-    doc.text('DATI PAZIENTE PRINCIPALE:', 10, yPosition);
-    yPosition += 10;
-    doc.setFont(undefined, 'normal');
+    doc.setFont('helvetica', 'bold');
+    doc.text('Professione:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.professione, rightCol + 25, yPosition);
+    yPosition += lineHeight;
     
-    doc.text(`Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, pienamente consapevole della importanza della presente dichiarazione,`, 10, yPosition);
-    yPosition += 5;
-    doc.text(`nato/a a ${formData.luogoNascita} il ${formData.dataNascita}, professione: ${formData.professione},`, 10, yPosition);
-    yPosition += 5;
-    doc.text(`residente in ${formData.indirizzo}, ${formData.citta} ${formData.cap},`, 10, yPosition);
-    yPosition += 5;
-    doc.text(`Codice Fiscale: ${formData.codiceFiscale}, Documento: ${formData.numeroDocumento} scad. ${formData.scadenzaDocumento},`, 10, yPosition);
-    yPosition += 5;
-    doc.text(`Tel: ${formData.telefono}, Email: ${formData.email},`, 10, yPosition);
-    yPosition += 10;
+    // Riga 3
+    doc.setFont('helvetica', 'bold');
+    doc.text('Indirizzo:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${formData.indirizzo}, ${formData.citta} ${formData.cap}`, leftCol + 22, yPosition);
+    yPosition += lineHeight;
     
-    doc.text(`chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}`, 10, yPosition);
-    yPosition += 10;
+    // Riga 4
+    doc.setFont('helvetica', 'bold');
+    doc.text('Codice Fiscale:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.codiceFiscale, leftCol + 30, yPosition);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Telefono:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.telefono, rightCol + 20, yPosition);
+    yPosition += lineHeight;
+    
+    // Riga 5
+    doc.setFont('helvetica', 'bold');
+    doc.text('Documento N.:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.numeroDocumento, leftCol + 28, yPosition);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Scadenza:', rightCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.scadenzaDocumento, rightCol + 22, yPosition);
+    yPosition += lineHeight;
+    
+    // Riga 6
+    doc.setFont('helvetica', 'bold');
+    doc.text('Email:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.email, leftCol + 15, yPosition);
+    yPosition += lineHeight;
+    
+    // Riga 7
+    doc.setFont('helvetica', 'bold');
+    doc.text('Email Comunicazioni:', leftCol, yPosition);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.emailComunicazioni, leftCol + 40, yPosition);
+    yPosition += 12;
     
     // Dati partner se presenti
     if (formData.includePartner && formData.nomePartner) {
-        doc.setFont(undefined, 'bold');
-        doc.text('DATI PARTNER:', 10, yPosition);
-        yPosition += 10;
-        doc.setFont(undefined, 'normal');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('DATI PARTNER', 10, yPosition);
+        yPosition += 8;
         
-        doc.text(`Il/La sottoscritto/a ${formData.nomePartner} ${formData.cognomePartner},`, 10, yPosition);
-        yPosition += 5;
-        doc.text(`nato/a a ${formData.luogoNascitaPartner} il ${formData.dataNascitaPartner}, professione: ${formData.professionePartner},`, 10, yPosition);
-        yPosition += 5;
-        doc.text(`residente in ${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner},`, 10, yPosition);
-        yPosition += 5;
-        doc.text(`Codice Fiscale: ${formData.codiceFiscalePartner}, Documento: ${formData.numeroDocumentoPartner} scad. ${formData.scadenzaDocumentoPartner},`, 10, yPosition);
-        yPosition += 5;
-        doc.text(`Tel: ${formData.telefonoPartner}, Email: ${formData.emailPartner}`, 10, yPosition);
-        yPosition += 15;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        // Tabella partner
+        doc.setFont('helvetica', 'bold');
+        doc.text('Nome e Cognome:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${formData.nomePartner} ${formData.cognomePartner}`, leftCol + 35, yPosition);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Data di Nascita:', rightCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.dataNascitaPartner, rightCol + 32, yPosition);
+        yPosition += lineHeight;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Luogo di Nascita:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.luogoNascitaPartner, leftCol + 35, yPosition);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Professione:', rightCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.professionePartner, rightCol + 25, yPosition);
+        yPosition += lineHeight;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Indirizzo:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner}`, leftCol + 22, yPosition);
+        yPosition += lineHeight;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Codice Fiscale:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.codiceFiscalePartner, leftCol + 30, yPosition);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Telefono:', rightCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.telefonoPartner, rightCol + 20, yPosition);
+        yPosition += lineHeight;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Documento N.:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.numeroDocumentoPartner, leftCol + 28, yPosition);
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Scadenza:', rightCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.scadenzaDocumentoPartner, rightCol + 22, yPosition);
+        yPosition += lineHeight;
+        
+        doc.setFont('helvetica', 'bold');
+        doc.text('Email:', leftCol, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text(formData.emailPartner, leftCol + 15, yPosition);
+        yPosition += 12;
     }
     
-    // Consenso finale
-    const finalConsent = `A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando, la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail. Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
-    const finalLines = doc.splitTextToSize(finalConsent, 190);
-    finalLines.forEach(line => {
+    // === SEZIONE CONSENSO ===
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    const consentText = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}${formData.includePartner ? ` e ${formData.nomePartner} ${formData.cognomePartner}` : ''}, pienamente consapevole della importanza della presente dichiarazione, dichiara di essere stato esaustivamente e chiaramente informato su:
+
+• le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;
+
+• i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;
+
+• il diritto di accesso ai dati personali, la facoltà di chiederne l'aggiornamento, la rettifica, l'integrazione e la cancellazione e/o la limitazione nell'utilizzo degli stessi;
+
+• il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;
+
+• la necessità di fornire dati richiesti per poter ottenere l'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.
+
+Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}
+
+A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail.
+
+Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
+    
+    const consentLines = doc.splitTextToSize(consentText, 190);
+    consentLines.forEach(line => {
+        if (yPosition > 270) {
+            doc.addPage();
+            yPosition = 15;
+        }
         doc.text(line, 10, yPosition);
         yPosition += 5;
     });
@@ -222,10 +338,16 @@ la necessità di fornire dati richiesti per poter ottenere l'erogazione di prest
     yPosition += 10;
     
     // Responsabile trattamento
-    doc.text('Dr Claudio Manna, Responsabile trattamento dei dati medesimi.', 10, yPosition);
-    yPosition += 10;
+    if (yPosition > 260) {
+        doc.addPage();
+        yPosition = 15;
+    }
     
-    // Timestamp e IP per validità legale
+    doc.setFont('helvetica', 'bold');
+    doc.text('Dr Claudio Manna, Responsabile trattamento dei dati medesimi.', 10, yPosition);
+    yPosition += 15;
+    
+    // Data compilazione
     const now = new Date();
     const timestamp = now.toLocaleString('it-IT', {
         year: 'numeric',
@@ -236,34 +358,39 @@ la necessità di fornire dati richiesti per poter ottenere l'erogazione di prest
         second: '2-digit'
     });
     
-    doc.setFont(undefined, 'bold');
-    doc.text('VALIDITÀ LEGALE:', 10, yPosition);
-    yPosition += 8;
-    doc.setFont(undefined, 'normal');
-    doc.text(`Data e ora compilazione: ${timestamp}`, 10, yPosition);
-    yPosition += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Data: ${timestamp}`, 10, yPosition);
+    yPosition += 15;
+    
+    // === SEZIONE VALIDITÀ LEGALE ===
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VALIDITÀ LEGALE DIGITALE:', 10, yPosition);
+    yPosition += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Compilato il: ${timestamp}`, 10, yPosition);
+    yPosition += 4;
     doc.text(`Indirizzo IP: ${userIP}`, 10, yPosition);
-    yPosition += 5;
-    doc.text(`Browser: ${navigator.userAgent}`, 10, yPosition);
-    yPosition += 10;
+    yPosition += 8;
     
     // Note legali
-    yPosition += 5;
     doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
     doc.text('NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.', 10, yPosition);
     yPosition += 10;
     
-    // Info centro
-    doc.setFont(undefined, 'bold');
+    // Footer centro
     doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
     doc.text('Centro Biofertility - Junior s.r.l.', 10, yPosition);
     yPosition += 5;
-    doc.setFont(undefined, 'normal');
-    doc.text('Sede operativa: Viale degli Eroi di Rodi 214, 00128-Roma Tel 06-5083375  Fax 06-5083375', 10, yPosition);
-    yPosition += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Sede operativa: Viale degli Eroi di Rodi 214, 00128-Roma Tel 06-5083375 Fax 06-5083375', 10, yPosition);
+    yPosition += 4;
     doc.text('E-mail: centrimanna2@gmail.com', 10, yPosition);
-    yPosition += 5;
-    doc.text('Sede legale: Via Velletri 7, 00198 Roma  Tel 06-8415269  E-mail centrimanna2@gmail.com', 10, yPosition);
+    yPosition += 4;
+    doc.text('Sede legale: Via Velletri 7, 00198 Roma Tel 06-8415269 E-mail centrimanna2@gmail.com', 10, yPosition);
     
     return doc;
 }
