@@ -127,6 +127,19 @@ function validateForm() {
         isValid = false;
     }
     
+    // Validazione consensi GDPR obbligatori
+    const gdprConsent = document.getElementById('gdprConsent');
+    if (!gdprConsent.checked) {
+        showFieldError(gdprConsent, 'Consenso GDPR obbligatorio');
+        isValid = false;
+    }
+    
+    const privacyConsent = document.getElementById('privacyConsent');
+    if (!privacyConsent.checked) {
+        showFieldError(privacyConsent, 'Consenso privacy obbligatorio');
+        isValid = false;
+    }
+    
     return isValid;
 }
 
