@@ -1,5 +1,21 @@
 // Configurazione per Netlify Functions
 
+// Debug checkbox al caricamento pagina
+document.addEventListener('DOMContentLoaded', function() {
+    const gdprCheckbox = document.getElementById('gdprConsent');
+    const privacyCheckbox = document.getElementById('privacyConsent');
+    
+    console.log('GDPR Checkbox:', gdprCheckbox ? 'TROVATO' : 'NON TROVATO');
+    console.log('Privacy Checkbox:', privacyCheckbox ? 'TROVATO' : 'NON TROVATO');
+    
+    if (gdprCheckbox) {
+        console.log('GDPR styles:', window.getComputedStyle(gdprCheckbox));
+    }
+    if (privacyCheckbox) {
+        console.log('Privacy styles:', window.getComputedStyle(privacyCheckbox));
+    }
+});
+
 
 // Gestione visibilità sezione partner
 document.getElementById('includePartner').addEventListener('change', function() {

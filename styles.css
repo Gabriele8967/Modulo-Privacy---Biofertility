@@ -127,6 +127,20 @@ input[type="checkbox"] {
     visibility: visible !important;
     opacity: 1 !important;
     position: static !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
+    vertical-align: top !important;
+}
+
+#gdprConsent, #privacyConsent {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: static !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
 }
 
 .checkbox-group label {
