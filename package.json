@@ -26,7 +26,8 @@
     "nodemailer": "^6.9.8"
   },
   "devDependencies": {
-    "serve": "^14.2.1",
-    "netlify-cli": "^17.15.4"
+    "@netlify/functions": "^4.2.5",
+    "netlify-cli": "^17.15.4",
+    "serve": "^14.2.1"
   }
 }

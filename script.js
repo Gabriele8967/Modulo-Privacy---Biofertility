@@ -1,5 +1,6 @@
 // Configurazione per Netlify Functions
 
+
 // Gestione visibilità sezione partner
 document.getElementById('includePartner').addEventListener('change', function() {
     const partnerSection = document.getElementById('partnerSection');

@@ -12,7 +12,7 @@ exports.handler = async (event, context) => {
         const data = JSON.parse(event.body);
         
         // Configura trasportatore Gmail
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.GMAIL_USER,
