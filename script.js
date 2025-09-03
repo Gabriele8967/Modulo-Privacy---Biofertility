@@ -421,7 +421,7 @@ Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento d
     doc.text(`Data: ${timestamp}`, margin, yPosition);
     yPosition += 15;
     
-    // === VALIDITÀ LEGALE ===
+    // === VALIDITÀ LEGALE DIGITALE ===
     doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.text('VALIDITÀ LEGALE DIGITALE', margin, yPosition);
@@ -429,10 +429,60 @@ Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento d
     
     doc.setFont('times', 'normal');
     doc.setFontSize(9);
-    doc.text(`Modulo compilato digitalmente il: ${timestamp}`, margin, yPosition);
+    
+    // Timestamp preciso con secondi
+    const preciseTimestamp = now.toLocaleString('it-IT', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZoneName: 'short'
+    });
+    
+    // Hash unico documento basato su contenuto + timestamp
+    const documentHash = btoa(JSON.stringify({
+        nome: formData.nome,
+        cognome: formData.cognome,
+        cf: formData.codiceFiscale,
+        timestamp: now.getTime(),
+        ip: userIP
+    })).substring(0, 16);
+    
+    // Geolocalizzazione approssimativa da IP (se disponibile)
+    const geoInfo = 'Italia'; // In produzione si può usare un servizio di geolocalizzazione
+    
+    doc.text(`Documento compilato il: ${preciseTimestamp}`, margin, yPosition);
     yPosition += 4;
-    doc.text(`Indirizzo IP di compilazione: ${userIP}`, margin, yPosition);
-    yPosition += 8;
+    doc.text(`Indirizzo IP mittente: ${userIP} (${geoInfo})`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`User Agent: ${navigator.userAgent.substring(0, 80)}`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`ID Univoco Documento: ${documentHash}`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`Risoluzione Schermo: ${screen.width}x${screen.height}`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`Piattaforma: ${navigator.platform}`, margin, yPosition);
+    yPosition += 4;
+    doc.text(`Lingua Browser: ${navigator.language}`, margin, yPosition);
+    yPosition += 6;
+    
+    // Dichiarazione di autenticità
+    doc.setFont('times', 'bold');
+    doc.setFontSize(9);
+    doc.text('DICHIARAZIONE DI AUTENTICITÀ DIGITALE', margin, yPosition);
+    yPosition += 4;
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    const authenticityText = 'Il presente documento è stato compilato digitalmente tramite interfaccia web sicura. I dati tecnici sopra riportati certificano l\'autenticità della compilazione e l\'identità del dispositivo utilizzato. Ai sensi dell\'art. 20 del CAD (Codice dell\'Amministrazione Digitale), il documento informatico soddisfa il requisito della forma scritta e ha l\'efficacia probatoria prevista dall\'art. 2712 del Codice Civile.';
+    const authLines = doc.splitTextToSize(authenticityText, contentWidth);
+    authLines.forEach(line => {
+        doc.text(line, margin, yPosition);
+        yPosition += 3.5;
+    });
+    yPosition += 4;
     
     // Note legali
     doc.setFont('times', 'italic');

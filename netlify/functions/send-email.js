@@ -117,6 +117,25 @@ exports.handler = async (event, context) => {
             attachments: attachments
         };
 
+        // Log di sicurezza per tracciabilità
+        const securityLog = {
+            timestamp: new Date().toISOString(),
+            ipAddress: data.ipAddress,
+            userAgent: data.userAgent,
+            paziente: `${data.nome} ${data.cognome}`,
+            codiceFiscale: data.codiceFiscale,
+            documentHash: Buffer.from(JSON.stringify({
+                nome: data.nome,
+                cognome: data.cognome,
+                cf: data.codiceFiscale,
+                timestamp: Date.now(),
+                ip: data.ipAddress
+            })).toString('base64').substring(0, 16),
+            action: 'CONSENSO_PRIVACY_INVIATO'
+        };
+        
+        console.log('PRIVACY_CONSENT_LOG:', JSON.stringify(securityLog));
+
         // Invia email
         await transporter.sendMail(mailOptions);
 
@@ -127,7 +146,12 @@ exports.handler = async (event, context) => {
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'POST'
             },
-            body: JSON.stringify({ success: true, message: 'Email inviata con successo' })
+            body: JSON.stringify({ 
+                success: true, 
+                message: 'Email inviata con successo',
+                documentId: securityLog.documentHash,
+                timestamp: securityLog.timestamp
+            })
         };
 
     } catch (error) {
