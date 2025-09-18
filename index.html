@@ -107,9 +107,15 @@
 
             <div class="form-section">
                 <h3>Dati del Partner (Se presente)</h3>
-                <div class="checkbox-group">
+                
+                <div class="partner-info">
+                    <p><strong>📋 Importante:</strong></p>
+                    <p>Se stai effettuando la procedura insieme al tuo partner, <strong>spunta la casella qui sotto</strong> per includere anche i suoi dati nel modulo privacy. Questo ti permetterà di completare tutto in un unico passaggio.</p>
+                </div>
+                
+                <div class="checkbox-group highlight-checkbox">
                     <input type="checkbox" id="includePartner" name="includePartner">
-                    <label for="includePartner">Includi dati del partner</label>
+                    <label for="includePartner"><strong>✅ Includi dati del partner</strong></label>
                 </div>
 
                 <div id="partnerSection" class="partner-section" style="display: none;">
@@ -215,7 +221,7 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" id="submitBtn">Genera e Invia Modulo Privacy</button>
+                <button type="submit" id="submitBtn">Invia modulo privacy e completa la prenotazione</button>
             </div>
         </form>
 

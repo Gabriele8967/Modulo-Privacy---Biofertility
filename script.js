@@ -611,11 +611,9 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         loading.style.display = 'none';
         success.style.display = 'block';
         
-        // Reset form dopo 3 secondi
+        // Reindirizza al sito di prenotazione dopo 3 secondi
         setTimeout(() => {
-            this.reset();
-            success.style.display = 'none';
-            document.getElementById('partnerSection').style.display = 'none';
+            window.location.href = 'https://www.centroinfertilita.it/prenota-una-visita/';
         }, 3000);
         
     } catch (error) {
