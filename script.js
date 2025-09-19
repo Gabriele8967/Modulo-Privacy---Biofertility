@@ -1,6 +1,59 @@
 // Configurazione per Netlify Functions
 
+// Protezione per garantire visibilità checkbox GDPR
+function forceGDPRCheckboxesVisible() {
+    const gdprConsent = document.getElementById('gdprConsent');
+    const privacyConsent = document.getElementById('privacyConsent');
+    
+    if (gdprConsent) {
+        gdprConsent.style.display = 'inline-block';
+        gdprConsent.style.visibility = 'visible';
+        gdprConsent.style.opacity = '1';
+        gdprConsent.style.position = 'static';
+    }
+    
+    if (privacyConsent) {
+        privacyConsent.style.display = 'inline-block';
+        privacyConsent.style.visibility = 'visible';
+        privacyConsent.style.opacity = '1';
+        privacyConsent.style.position = 'static';
+    }
+}
 
+// Esegui protezione all'avvio e periodicamente
+document.addEventListener('DOMContentLoaded', forceGDPRCheckboxesVisible);
+window.addEventListener('load', forceGDPRCheckboxesVisible);
+
+// Protezione aggiuntiva ogni 500ms per i primi 5 secondi
+let protectionInterval = setInterval(forceGDPRCheckboxesVisible, 500);
+setTimeout(() => clearInterval(protectionInterval), 5000);
+
+// Observer per monitorare modifiche alle checkbox GDPR
+function setupGDPRObserver() {
+    const gdprConsent = document.getElementById('gdprConsent');
+    const privacyConsent = document.getElementById('privacyConsent');
+    
+    if (gdprConsent || privacyConsent) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                    setTimeout(forceGDPRCheckboxesVisible, 10);
+                }
+            });
+        });
+        
+        if (gdprConsent) {
+            observer.observe(gdprConsent, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
+        if (privacyConsent) {
+            observer.observe(privacyConsent, { attributes: true, attributeFilter: ['style', 'class'] });
+        }
+    }
+}
+
+// Avvia observer
+setTimeout(setupGDPRObserver, 1000);
 
 // Gestione visibilità sezione partner
 document.getElementById('includePartner').addEventListener('change', function() {
