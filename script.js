@@ -1,5 +1,7 @@
 // Configurazione per Netlify Functions
 
+// Variabile per tracciare se il form è stato inviato con successo
+let formSubmittedSuccessfully = false;
 
 
 // Gestione visibilità sezione partner
@@ -611,6 +613,9 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         loading.style.display = 'none';
         success.style.display = 'block';
         
+        // Imposta flag per disabilitare l'avviso di uscita
+        formSubmittedSuccessfully = true;
+        
         // Reindirizza al sito di prenotazione dopo 3 secondi
         setTimeout(() => {
             window.location.href = 'https://www.centroinfertilita.it/prenota-una-visita/';
@@ -622,6 +627,25 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         loading.style.display = 'none';
     } finally {
         submitBtn.disabled = false;
+    }
+});
+
+// Gestione visuale per le checkbox GDPR
+document.getElementById('gdprConsent').addEventListener('change', function() {
+    const container = document.querySelector('.gdpr-consent-container');
+    if (this.checked) {
+        container.classList.add('checked');
+    } else {
+        container.classList.remove('checked');
+    }
+});
+
+document.getElementById('privacyConsent').addEventListener('change', function() {
+    const container = document.querySelector('.privacy-consent-container');
+    if (this.checked) {
+        container.classList.add('checked');
+    } else {
+        container.classList.remove('checked');
     }
 });
 
@@ -676,6 +700,11 @@ document.getElementById('documentoRetroPartner').addEventListener('change', func
 
 // Prevenzione accidentale chiusura pagina
 window.addEventListener('beforeunload', function(e) {
+    // Se il form è stato inviato con successo, non mostrare l'avviso
+    if (formSubmittedSuccessfully) {
+        return;
+    }
+    
     const form = document.getElementById('privacyForm');
     const inputs = form.querySelectorAll('input');
     let hasData = false;
