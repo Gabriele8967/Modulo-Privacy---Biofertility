@@ -119,91 +119,6 @@ input[type="file"]:hover {
     margin-bottom: 20px;
 }
 
-/* Stili specifici per i container dei consensi GDPR */
-.gdpr-consent-container,
-.privacy-consent-container {
-    margin-bottom: 25px;
-    padding: 20px;
-    border-radius: 10px;
-    border: 2px solid #e0e0e0;
-    transition: all 0.3s ease;
-}
-
-.gdpr-consent-container {
-    background: #e8f5e8;
-    border-color: #4caf50;
-}
-
-.privacy-consent-container {
-    background: #e3f2fd;
-    border-color: #2196f3;
-}
-
-.gdpr-consent-container:hover,
-.privacy-consent-container:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Stili specifici per le checkbox GDPR */
-.gdpr-checkbox,
-.privacy-checkbox {
-    margin-bottom: 0;
-}
-
-.gdpr-checkbox input[type="checkbox"],
-.privacy-checkbox input[type="checkbox"] {
-    width: 20px !important;
-    height: 20px !important;
-    margin-right: 15px !important;
-    margin-top: 2px !important;
-    cursor: pointer !important;
-    transform: scale(1.3) !important;
-}
-
-.gdpr-checkbox label,
-.privacy-checkbox label {
-    font-size: 16px;
-    font-weight: 500;
-    line-height: 1.4;
-    cursor: pointer;
-    user-select: none;
-}
-
-.gdpr-checkbox label {
-    color: #2e7d32;
-}
-
-.privacy-checkbox label {
-    color: #1565c0;
-}
-
-/* Effetti quando le checkbox sono selezionate */
-.gdpr-consent-container:has(input:checked) {
-    background: #c8e6c9;
-    border-color: #388e3c;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-}
-
-.privacy-consent-container:has(input:checked) {
-    background: #bbdefb;
-    border-color: #1976d2;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
-}
-
-/* Fallback per browser che non supportano :has() */
-.gdpr-consent-container.checked {
-    background: #c8e6c9;
-    border-color: #388e3c;
-    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-}
-
-.privacy-consent-container.checked {
-    background: #bbdefb;
-    border-color: #1976d2;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
-}
-
 input[type="checkbox"] {
     margin-top: 4px;
     transform: scale(1.2);
@@ -405,25 +320,6 @@ small {
     button {
         width: 100%;
         padding: 12px;
-    }
-    
-    .gdpr-consent-container,
-    .privacy-consent-container {
-        padding: 15px;
-        margin-bottom: 20px;
-    }
-    
-    .gdpr-checkbox label,
-    .privacy-checkbox label {
-        font-size: 15px;
-    }
-    
-    .gdpr-checkbox input[type="checkbox"],
-    .privacy-checkbox input[type="checkbox"] {
-        width: 18px !important;
-        height: 18px !important;
-        margin-right: 12px !important;
-        transform: scale(1.2) !important;
     }
 }
 
