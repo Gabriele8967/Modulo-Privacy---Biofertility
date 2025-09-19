@@ -2,39 +2,23 @@
 
 
 
-// Gestione visibilità sezione partner tramite bottone
-document.getElementById('includePartnerBtn').addEventListener('click', function() {
+// Gestione visibilità sezione partner
+document.getElementById('includePartner').addEventListener('change', function() {
     const partnerSection = document.getElementById('partnerSection');
     const partnerInputs = partnerSection.querySelectorAll('input');
-    const hiddenCheckbox = document.getElementById('includePartner');
-    const btnText = this.querySelector('.btn-text');
-    const btnIcon = this.querySelector('.btn-icon');
     
-    // Toggle lo stato
-    if (hiddenCheckbox.checked) {
-        // Disattiva sezione partner
-        hiddenCheckbox.checked = false;
-        partnerSection.style.display = 'none';
-        this.classList.remove('active');
-        btnText.textContent = 'Premi qui per includere i dati del partner';
-        btnIcon.textContent = '👥';
-        
-        partnerInputs.forEach(input => {
-            input.required = false;
-            input.value = '';
-        });
-    } else {
-        // Attiva sezione partner
-        hiddenCheckbox.checked = true;
+    if (this.checked) {
         partnerSection.style.display = 'block';
-        this.classList.add('active');
-        btnText.textContent = 'Clicca per rimuovere i dati del partner';
-        btnIcon.textContent = '❌';
-        
         partnerInputs.forEach(input => {
             if (input.type !== 'file') {
                 input.required = true;
             }
+        });
+    } else {
+        partnerSection.style.display = 'none';
+        partnerInputs.forEach(input => {
+            input.required = false;
+            input.value = '';
         });
     }
 });

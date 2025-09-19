@@ -110,15 +110,12 @@
                 
                 <div class="partner-info">
                     <p><strong>📋 Importante:</strong></p>
-                    <p>Se stai effettuando la procedura insieme al tuo partner, <strong>premi il bottone qui sotto</strong> per includere anche i suoi dati nel modulo privacy. Questo ti permetterà di completare tutto in un unico passaggio.</p>
+                    <p>Se stai effettuando la procedura insieme al tuo partner, <strong>spunta la casella qui sotto</strong> per includere anche i suoi dati nel modulo privacy. Questo ti permetterà di completare tutto in un unico passaggio.</p>
                 </div>
                 
-                <div class="partner-button-container">
-                    <button type="button" id="includePartnerBtn" class="partner-toggle-btn">
-                        <span class="btn-icon">👥</span>
-                        <span class="btn-text">Premi qui per includere i dati del partner</span>
-                    </button>
-                    <input type="checkbox" id="includePartner" name="includePartner" style="display: none;">
+                <div class="checkbox-group highlight-checkbox">
+                    <input type="checkbox" id="includePartner" name="includePartner">
+                    <label for="includePartner"><strong>✅ Includi dati del partner</strong></label>
                 </div>
 
                 <div id="partnerSection" class="partner-section" style="display: none;">
@@ -212,12 +209,12 @@
                     <p>I tuoi dati personali saranno trattati esclusivamente per le finalità mediche indicate nel modulo di consenso. Non verranno salvati sui nostri server ma solo inviati tramite email sicura al centro medico. Hai diritto di accesso, rettifica, cancellazione e portabilità dei tuoi dati secondo il Regolamento UE 2016/679.</p>
                 </div>
 
-                <div class="checkbox-group gdpr-checkbox-container">
+                <div class="checkbox-group">
                     <input type="checkbox" id="gdprConsent" name="gdprConsent">
                     <label for="gdprConsent">Accetto il trattamento dei dati personali secondo l'informativa GDPR *</label>
                 </div>
 
-                <div class="checkbox-group gdpr-checkbox-container">
+                <div class="checkbox-group">
                     <input type="checkbox" id="privacyConsent" name="privacyConsent">
                     <label for="privacyConsent">Presto il consenso per il trattamento dei dati personali e sensibili come descritto nel modulo *</label>
                 </div>
