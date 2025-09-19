@@ -1,5 +1,8 @@
 // Configurazione per Netlify Functions
 
+// Variabile per tracciare invio completato con successo
+let formSubmittedSuccessfully = false;
+
 // Protezione per garantire visibilità checkbox GDPR
 function forceGDPRCheckboxesVisible() {
     const gdprConsent = document.getElementById('gdprConsent');
@@ -664,6 +667,9 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         loading.style.display = 'none';
         success.style.display = 'block';
         
+        // Imposta flag per disabilitare avviso uscita
+        formSubmittedSuccessfully = true;
+        
         // Reindirizza al sito di prenotazione dopo 3 secondi
         setTimeout(() => {
             window.location.href = 'https://www.centroinfertilita.it/prenota-una-visita/';
@@ -729,6 +735,11 @@ document.getElementById('documentoRetroPartner').addEventListener('change', func
 
 // Prevenzione accidentale chiusura pagina
 window.addEventListener('beforeunload', function(e) {
+    // Se il form è stato inviato con successo, non mostrare l'avviso
+    if (formSubmittedSuccessfully) {
+        return;
+    }
+    
     const form = document.getElementById('privacyForm');
     const inputs = form.querySelectorAll('input');
     let hasData = false;
