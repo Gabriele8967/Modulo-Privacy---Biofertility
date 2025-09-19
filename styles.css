@@ -119,6 +119,33 @@ input[type="file"]:hover {
     margin-bottom: 20px;
 }
 
+/* Stili specifici per le checkbox GDPR per assicurare la massima visibilità */
+.checkbox-group:has(#gdprConsent), 
+.checkbox-group:has(#privacyConsent) {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+    background: #f9f9f9 !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    border: 1px solid #ddd !important;
+}
+
+/* Fallback per browser che non supportano :has() */
+div:has(input#gdprConsent),
+div:has(input#privacyConsent),
+.gdpr-checkbox-container {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+    background: #f9f9f9 !important;
+    padding: 15px !important;
+    border-radius: 8px !important;
+    border: 1px solid #ddd !important;
+}
+
 input[type="checkbox"] {
     margin-top: 4px;
     transform: scale(1.2);
@@ -144,6 +171,14 @@ input[type="checkbox"] {
     appearance: checkbox !important;
     -webkit-appearance: checkbox !important;
     -moz-appearance: checkbox !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    flex-shrink: 0 !important;
+    z-index: 1 !important;
+    background: white !important;
+    border: 2px solid #666 !important;
+    border-radius: 3px !important;
+    cursor: pointer !important;
 }
 
 .checkbox-group label {
@@ -171,18 +206,60 @@ input[type="checkbox"] {
     color: #d39e00;
 }
 
-.highlight-checkbox {
-    background: #e3f2fd;
-    border: 2px solid #2196f3;
-    border-radius: 8px;
-    padding: 15px;
+.partner-button-container {
     margin-bottom: 20px;
-    box-shadow: 0 2px 10px rgba(33, 150, 243, 0.1);
+    text-align: center;
 }
 
-.highlight-checkbox label {
-    font-size: 16px;
-    color: #1976d2;
+.partner-toggle-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 20px 40px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    min-height: 70px;
+}
+
+.partner-toggle-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, #5CBF60, #4CAF50);
+}
+
+.partner-toggle-btn:active {
+    transform: translateY(-1px);
+}
+
+.partner-toggle-btn.active {
+    background: linear-gradient(135deg, #ff6b6b, #e74c3c);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+}
+
+.partner-toggle-btn.active:hover {
+    background: linear-gradient(135deg, #ff5252, #ff6b6b);
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+}
+
+.btn-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.btn-text {
+    font-size: 18px;
+    line-height: 1.2;
 }
 
 .partner-section {
@@ -320,6 +397,23 @@ small {
     button {
         width: 100%;
         padding: 12px;
+    }
+    
+    .partner-toggle-btn {
+        padding: 15px 20px;
+        font-size: 16px;
+        min-height: 60px;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .btn-icon {
+        font-size: 20px;
+    }
+    
+    .btn-text {
+        font-size: 16px;
+        text-align: center;
     }
 }
 
