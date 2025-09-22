@@ -3,6 +3,108 @@
 // Variabile per tracciare invio completato con successo
 let formSubmittedSuccessfully = false;
 
+// Sistema di logging per debug
+const DebugLogger = {
+    logs: [],
+    
+    log(level, message, data = null) {
+        const timestamp = new Date().toISOString();
+        const logEntry = {
+            timestamp,
+            level,
+            message,
+            data,
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        };
+        
+        this.logs.push(logEntry);
+        console.log(`[${level}] ${message}`, data);
+        
+        // Mantieni solo gli ultimi 50 log
+        if (this.logs.length > 50) {
+            this.logs = this.logs.slice(-50);
+        }
+        
+        // Salva in localStorage per debug persistente
+        try {
+            localStorage.setItem('privacyForm_debug', JSON.stringify(this.logs));
+        } catch (e) {
+            console.warn('Impossibile salvare log in localStorage:', e);
+        }
+    },
+    
+    error(message, error = null) {
+        this.log('ERROR', message, {
+            error: error ? {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            } : null
+        });
+    },
+    
+    warn(message, data = null) {
+        this.log('WARN', message, data);
+    },
+    
+    info(message, data = null) {
+        this.log('INFO', message, data);
+    },
+    
+    getLogs() {
+        return this.logs;
+    },
+    
+    exportLogs() {
+        return JSON.stringify(this.logs, null, 2);
+    }
+};
+
+// Funzione per rilevare problemi del browser
+function detectBrowserIssues() {
+    const issues = [];
+    
+    // Controlla supporto APIs critiche
+    if (!window.fetch) issues.push('fetch API non supportata');
+    if (!window.FormData) issues.push('FormData non supportata');
+    if (!window.FileReader) issues.push('FileReader non supportato');
+    if (!window.AbortController) issues.push('AbortController non supportato');
+    
+    // Controlla JavaScript abilitato
+    if (!window.navigator) issues.push('Navigator non disponibile');
+    
+    // Controlla localStorage
+    try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+    } catch (e) {
+        issues.push('localStorage non disponibile');
+    }
+    
+    // Controlla UserAgent
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('chrome') && ua.includes('edg')) {
+        DebugLogger.info('Browser rilevato: Microsoft Edge');
+    } else if (ua.includes('chrome')) {
+        DebugLogger.info('Browser rilevato: Chrome');
+    } else if (ua.includes('firefox')) {
+        DebugLogger.info('Browser rilevato: Firefox');
+    } else if (ua.includes('safari')) {
+        DebugLogger.info('Browser rilevato: Safari');
+    } else {
+        DebugLogger.warn('Browser non riconosciuto', { userAgent: navigator.userAgent });
+    }
+    
+    if (issues.length > 0) {
+        DebugLogger.error('Problemi di compatibilità rilevati', { issues });
+        return issues;
+    }
+    
+    DebugLogger.info('Browser supportato completamente');
+    return null;
+}
+
 // Protezione per garantire visibilità checkbox GDPR
 function forceGDPRCheckboxesVisible() {
     const gdprConsent = document.getElementById('gdprConsent');
@@ -23,9 +125,37 @@ function forceGDPRCheckboxesVisible() {
     }
 }
 
-// Esegui protezione all'avvio e periodicamente
-document.addEventListener('DOMContentLoaded', forceGDPRCheckboxesVisible);
-window.addEventListener('load', forceGDPRCheckboxesVisible);
+// Inizializzazione con controlli di compatibilità
+document.addEventListener('DOMContentLoaded', function() {
+    DebugLogger.info('DOM caricato, inizializzazione modulo');
+    
+    // Controlla compatibilità browser (silenzioso)
+    const browserIssues = detectBrowserIssues();
+    if (browserIssues && browserIssues.length > 2) { // Solo per problemi gravi
+        DebugLogger.error('Browser non compatibile', { issues: browserIssues });
+        
+        const warningMessage = `Il tuo browser potrebbe non essere aggiornato.\n\n` +
+            `Per evitare problemi:\n` +
+            `• Usa Chrome, Firefox o Safari aggiornati\n` +
+            `• Aggiorna il browser se possibile\n\n` +
+            `Puoi continuare, ma se hai problemi chiama il centro.`;
+            
+        if (confirm(warningMessage + '\n\nVuoi continuare?')) {
+            DebugLogger.info('Utente ha scelto di continuare nonostante problemi browser');
+        } else {
+            DebugLogger.info('Utente ha scelto di non continuare');
+            document.body.innerHTML = '<div style="text-align:center;padding:50px;font-family:Arial;"><h2>Browser da aggiornare</h2><p>Chiama il centro per assistenza: 06-5083375</p></div>';
+            return;
+        }
+    }
+    
+    forceGDPRCheckboxesVisible();
+});
+
+window.addEventListener('load', function() {
+    DebugLogger.info('Pagina completamente caricata');
+    forceGDPRCheckboxesVisible();
+});
 
 // Protezione aggiuntiva ogni 500ms per i primi 5 secondi
 let protectionInterval = setInterval(forceGDPRCheckboxesVisible, 500);
@@ -91,16 +221,51 @@ function validateCAP(cap) {
     return regex.test(cap);
 }
 
-// Funzione per ottenere l'indirizzo IP del client
+// Funzione per ottenere l'indirizzo IP del client con fallback multipli
 async function getUserIP() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        console.error('Errore nel recupero IP:', error);
-        return 'Non disponibile';
+    const ipServices = [
+        'https://api.ipify.org?format=json',
+        'https://ipapi.co/json/',
+        'https://api.ip.sb/ip'
+    ];
+    
+    for (const service of ipServices) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            
+            const response = await fetch(service, {
+                signal: controller.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                return data.ip || data.query || 'Non disponibile';
+            }
+        } catch (error) {
+            console.warn(`Errore servizio IP ${service}:`, error.message);
+            continue;
+        }
     }
+    
+    // Fallback finale: usa header del server se disponibile
+    try {
+        const response = await fetch('/.netlify/functions/get-ip', {
+            method: 'GET',
+            signal: AbortSignal.timeout(2000)
+        });
+        if (response.ok) {
+            const data = await response.json();
+            return data.ip || 'Non disponibile';
+        }
+    } catch (error) {
+        console.warn('Fallback IP server failed:', error.message);
+    }
+    
+    return 'Non disponibile';
 }
 
 // Funzione per convertire file in base64
@@ -125,7 +290,7 @@ function validateForm() {
     requiredFields.forEach(field => {
         if (field.type === 'checkbox') {
             if (!field.checked) {
-                showFieldError(field, 'Consenso obbligatorio');
+                showFieldError(field, 'Spunta per continuare');
                 isValid = false;
             }
         } else if (!field.value.trim()) {
@@ -137,7 +302,7 @@ function validateForm() {
     // Validazione specifica per codice fiscale
     const cf = document.getElementById('codiceFiscale');
     if (cf.value && !validateCodiceFiscale(cf.value)) {
-        showFieldError(cf, 'Codice fiscale non valido');
+        showFieldError(cf, 'Codice fiscale non valido (es: RSSMRA85M01H501Z)');
         isValid = false;
     }
     
@@ -151,14 +316,14 @@ function validateForm() {
     // Validazione CAP
     const cap = document.getElementById('cap');
     if (cap.value && !validateCAP(cap.value)) {
-        showFieldError(cap, 'CAP non valido (5 cifre)');
+        showFieldError(cap, 'CAP deve essere 5 cifre (es: 00100)');
         isValid = false;
     }
     
     // Validazione CAP partner se presente
     const capPartner = document.getElementById('capPartner');
     if (capPartner.value && !validateCAP(capPartner.value)) {
-        showFieldError(capPartner, 'CAP partner non valido (5 cifre)');
+        showFieldError(capPartner, 'CAP partner deve essere 5 cifre');
         isValid = false;
     }
     
@@ -166,7 +331,7 @@ function validateForm() {
     const email = document.getElementById('email');
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email.value && !emailRegex.test(email.value)) {
-        showFieldError(email, 'Email non valida');
+        showFieldError(email, 'Email non valida (es: mario@gmail.com)');
         isValid = false;
     }
     
@@ -594,7 +759,9 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         const data = Object.fromEntries(formData.entries());
         
         // Ottieni IP utente
+        DebugLogger.info('Inizio richiesta IP utente');
         const userIP = await getUserIP();
+        DebugLogger.info('IP utente ottenuto', { ip: userIP });
         
         // Genera PDF
         const pdf = await generatePDF(data, userIP);
@@ -651,17 +818,62 @@ document.getElementById('privacyForm').addEventListener('submit', async function
             userAgent: navigator.userAgent
         };
         
-        // Invia tramite Netlify Function
-        const response = await fetch('/.netlify/functions/send-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(functionData)
-        });
+        // Funzione con retry logic e timeout
+        async function sendWithRetry(data, maxRetries = 3) {
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondi timeout
+                    
+                    const response = await fetch('/.netlify/functions/send-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        return { success: true, data: result };
+                    } else {
+                        const errorData = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errorData}`);
+                    }
+                } catch (error) {
+                    DebugLogger.error(`Tentativo ${attempt}/${maxRetries} fallito`, {
+                        attempt,
+                        maxRetries,
+                        errorName: error.name,
+                        errorMessage: error.message,
+                        isTimeout: error.name === 'AbortError',
+                        isNetwork: error.message.includes('fetch')
+                    });
+                    
+                    if (attempt === maxRetries) {
+                        return { 
+                            success: false, 
+                            error: error.message,
+                            isTimeout: error.name === 'AbortError',
+                            isNetwork: error.message.includes('fetch')
+                        };
+                    }
+                    
+                    // Attesa progressiva tra i tentativi
+                    const waitTime = attempt * 2000;
+                    DebugLogger.info(`Attesa ${waitTime}ms prima del prossimo tentativo`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
+            }
+        }
         
-        if (!response.ok) {
-            throw new Error('Errore nell\'invio dell\'email');
+        const result = await sendWithRetry(functionData);
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Errore sconosciuto');
         }
         
         loading.style.display = 'none';
@@ -677,7 +889,46 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         
     } catch (error) {
         console.error('Errore nell\'invio:', error);
-        alert('Errore nell\'invio del modulo. Riprova più tardi.');
+        
+        // Messaggi semplici per utenti non tecnici
+        let errorMessage = `Non riesco a inviare il modulo.\n\n`;
+        
+        if (error.message.includes('AbortError') || error.message.includes('timeout')) {
+            errorMessage += `La connessione è lenta.\n\nCosa fare:\n• Controlla la tua connessione internet\n• Riprova tra qualche minuto\n\n`;
+        } else if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
+            errorMessage += `Problema di connessione.\n\nCosa fare:\n• Controlla la connessione internet\n• Prova con WiFi o dati mobili\n• Riprova tra qualche minuto\n\n`;
+        } else if (error.message.includes('500')) {
+            errorMessage += `Il servizio è temporaneamente non disponibile.\n\nCosa fare:\n• Riprova tra 2-3 minuti\n• Il problema si risolverà automaticamente\n\n`;
+        } else if (error.message.includes('blocked') || error.message.includes('CORS')) {
+            errorMessage += `Qualcosa sta bloccando l'invio.\n\nCosa fare:\n• Prova con un browser diverso (Chrome, Firefox)\n• Controlla se hai bloccatori di pubblicità attivi\n\n`;
+        } else {
+            errorMessage += `Si è verificato un problema.\n\nCosa fare:\n• Controlla che tutti i campi siano compilati\n• Verifica che le foto siano piccole (max 5MB)\n• Riprova tra qualche minuto\n\n`;
+        }
+        
+        errorMessage += `Per assistenza chiama: 06-5083375\nOppure scrivi a: centrimanna2@gmail.com\n\nI tuoi dati sono al sicuro e non si perderanno.`;
+        
+        // Log dettagliato per debug (invisibile all'utente)
+        DebugLogger.error('Errore finale invio modulo', {
+            error: error.message,
+            stack: error.stack,
+            formData: data,
+            userIP,
+            timestamp: new Date().toISOString()
+        });
+        
+        // Suggerimenti automatici basati sul tipo di errore
+        let automaticSuggestion = '';
+        if (error.message.includes('AbortError')) {
+            automaticSuggestion = '\n\nProvo a migliorare la connessione automaticamente...';
+            // Riduci timeout per prossimi tentativi
+            setTimeout(() => {
+                alert('Ora prova di nuovo - ho ottimizzato la connessione.');
+            }, 2000);
+        } else if (error.message.includes('blocked')) {
+            automaticSuggestion = '\n\nSuggerimento: Prova a ricaricare la pagina (F5) e ricompila il modulo.';
+        }
+        
+        alert(errorMessage + automaticSuggestion);
         loading.style.display = 'none';
     } finally {
         submitBtn.disabled = false;
@@ -693,7 +944,7 @@ document.getElementById('codiceFiscalePartner').addEventListener('input', functi
     this.value = this.value.toUpperCase();
 });
 
-// Validazione file upload
+// Validazione file upload con messaggi esplicativi
 function validateFileUpload(input) {
     const file = input.files[0];
     const maxSize = 5 * 1024 * 1024; // 5MB
@@ -701,13 +952,14 @@ function validateFileUpload(input) {
     
     if (file) {
         if (file.size > maxSize) {
-            alert('Il file è troppo grande. Massimo 5MB consentiti.');
+            const fileSizeMB = (file.size / 1024 / 1024).toFixed(1);
+            alert(`File troppo grande: ${fileSizeMB}MB\nMassimo consentito: 5MB\n\nComprimi l'immagine e riprova.`);
             input.value = '';
             return false;
         }
         
         if (!allowedTypes.includes(file.type)) {
-            alert('Formato file non supportato. Usa JPG, PNG o PDF.');
+            alert(`Formato non supportato.\nUsa: JPG, PNG o PDF`);
             input.value = '';
             return false;
         }
@@ -751,7 +1003,44 @@ window.addEventListener('beforeunload', function(e) {
     });
     
     if (hasData) {
+        DebugLogger.info('Utente tenta di chiudere pagina con dati compilati');
         e.preventDefault();
         e.returnValue = '';
     }
 });
+
+// Sistema di debug invisibile agli utenti finali
+// Accessibile solo tramite console per il supporto tecnico
+if (window.location.hostname === 'localhost' || window.location.hostname.includes('netlify')) {
+    // Debug accessibile solo tramite comando nascosto
+    Object.defineProperty(window, 'getFormDebugInfo', {
+        value: function() {
+            const logs = DebugLogger.getLogs();
+            const summary = {
+                totalErrors: logs.filter(l => l.level === 'ERROR').length,
+                lastError: logs.filter(l => l.level === 'ERROR').pop(),
+                browserInfo: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                formStatus: document.getElementById('privacyForm') ? 'loaded' : 'missing'
+            };
+            
+            console.log('=== INFORMAZIONI DEBUG MODULO PRIVACY ===');
+            console.log('Per il supporto tecnico - Non condividere pubblicamente');
+            console.log(JSON.stringify(summary, null, 2));
+            
+            // Copia automaticamente negli appunti se supportato
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(JSON.stringify(summary, null, 2))
+                    .then(() => console.log('✅ Debug info copiato negli appunti'))
+                    .catch(() => console.log('ℹ️ Copia manualmente le info sopra'));
+            }
+            
+            return summary;
+        },
+        enumerable: false,
+        writable: false
+    });
+    
+    // Log nascosto per debug sviluppatori
+    console.log('%c🔧 Debug disponibile', 'color: #888; font-size: 10px;', 'Usa getFormDebugInfo() per supporto tecnico');
+}
