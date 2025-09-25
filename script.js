@@ -882,9 +882,9 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         // Imposta flag per disabilitare avviso uscita
         formSubmittedSuccessfully = true;
         
-        // Reindirizza al sito di prenotazione dopo 3 secondi
+        // Mostra finestra di conferma invece del reindirizzamento
         setTimeout(() => {
-            window.location.href = 'https://www.centroinfertilita.it/prenota-una-visita/';
+            alert('INVIO COMPLETATO\n\nPUOI CHIUDERE LA PAGINA E TORNARE ALLA PAGINA DI PARTENZA');
         }, 3000);
         
     } catch (error) {
