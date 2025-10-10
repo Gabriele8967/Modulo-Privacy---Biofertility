@@ -227,11 +227,31 @@
         </form>
 
         <div id="loading" class="loading" style="display: none;">
-            <p>Generazione PDF in corso...</p>
+            <div style="text-align: center; padding: 20px;">
+                <div class="spinner"></div>
+                <h3 style="margin: 20px 0 10px 0; color: #007bff;">⏳ Attendere prego...</h3>
+                <p style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+                    <strong>Stiamo preparando il tuo modulo:</strong><br>
+                    • Generazione del documento PDF<br>
+                    • Invio sicuro al centro<br>
+                    • Verifica dei dati
+                </p>
+                <p style="font-size: 14px; color: #666; margin-top: 15px;">
+                    <strong>⚠️ NON chiudere questa pagina</strong><br>
+                    Tra poco vedrai un messaggio di conferma o di errore.
+                </p>
+                <p style="font-size: 13px; color: #999; margin-top: 10px; font-style: italic;">
+                    L'operazione può richiedere fino a 30 secondi
+                </p>
+            </div>
         </div>
 
         <div id="success" class="success-message" style="display: none;">
-            <p>Modulo inviato con successo!</p>
+            <h3 style="color: #28a745; margin-bottom: 10px;">✅ Modulo inviato con successo!</h3>
+            <p style="font-size: 16px; line-height: 1.6;">
+                Il tuo modulo è stato ricevuto correttamente dal centro.<br>
+                Riceverai una conferma via email.
+            </p>
         </div>
     </div>
 
