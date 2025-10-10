@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF Ottimizzato</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f5f5f5; }
+        h1 { color: #333; }
+        .controls { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { padding: 12px 24px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #0056b3; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
+        #status { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
+        #status.show { display: block; }
+        .success-msg { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error-msg { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info-msg { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #benchmark { margin-top: 10px; font-family: monospace; font-size: 14px; background: #fff3cd; padding: 10px; border-radius: 4px; display: none; }
+        #benchmark.show { display: block; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Test PDF Ottimizzato</h1>
+
+    <div class="controls">
+        <button onclick="generateTestPDF()">📄 Genera PDF Test</button>
+        <button onclick="benchmarkPDF()" class="success">⚡ Test Performance</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="benchmark"></div>
+
+    <script src="script.js"></script>
+    <script>
+        async function generateTestPDF() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'info-msg show';
+            statusDiv.innerHTML = '⏳ Generando PDF di test...';
+
+            const testData = {
+                nome: 'Maria',
+                cognome: 'Rossi',
+                dataNascita: '15/03/1990',
+                luogoNascita: 'Milano',
+                professione: 'Medico',
+                indirizzo: 'Via Giuseppe Verdi 45',
+                citta: 'Milano',
+                cap: '20100',
+                codiceFiscale: 'RSSMRA90C55F205Z',
+                numeroDocumento: 'AR9876543',
+                scadenzaDocumento: '15/03/2029',
+                telefono: '+39 335 1234567',
+                email: 'maria.rossi@email.com',
+                emailComunicazioni: 'maria.comunicazioni@email.com'
+            };
+
+            try {
+                const startTime = performance.now();
+                const pdf = await generatePDF(testData, '192.168.1.100');
+                const endTime = performance.now();
+                const duration = (endTime - startTime).toFixed(2);
+
+                pdf.save('test_modulo_privacy_ottimizzato.pdf');
+
+                statusDiv.className = 'success-msg show';
+                statusDiv.innerHTML = `✅ PDF generato con successo!<br>⚡ Tempo: ${duration}ms`;
+            } catch (error) {
+                console.error('Errore:', error);
+                statusDiv.className = 'error-msg show';
+                statusDiv.innerHTML = `❌ Errore durante la generazione: ${error.message}`;
+            }
+        }
+
+        async function benchmarkPDF() {
+            const benchmarkDiv = document.getElementById('benchmark');
+            const statusDiv = document.getElementById('status');
+
+            statusDiv.className = 'info-msg show';
+            statusDiv.innerHTML = '⏳ Esecuzione benchmark (10 iterazioni)...';
+
+            const testData = {
+                nome: 'Test',
+                cognome: 'Benchmark',
+                dataNascita: '01/01/1990',
+                luogoNascita: 'Roma',
+                professione: 'Test',
+                indirizzo: 'Via Test 1',
+                citta: 'Roma',
+                cap: '00100',
+                codiceFiscale: 'TSTBNC90A01H501Z',
+                numeroDocumento: 'XX1234567',
+                scadenzaDocumento: '01/01/2030',
+                telefono: '+39 333 1234567',
+                email: 'test@test.com',
+                emailComunicazioni: 'test@test.com'
+            };
+
+            const iterations = 10;
+            const times = [];
+
+            try {
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    await generatePDF(testData, '127.0.0.1');
+                    const end = performance.now();
+                    times.push(end - start);
+                }
+
+                const avg = (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
+                const min = Math.min(...times).toFixed(2);
+                const max = Math.max(...times).toFixed(2);
+
+                benchmarkDiv.className = 'show';
+                benchmarkDiv.innerHTML = `
+                    <strong>📊 Risultati Benchmark (${iterations} iterazioni):</strong><br>
+                    ⏱️ Tempo medio: ${avg}ms<br>
+                    🔽 Minimo: ${min}ms<br>
+                    🔼 Massimo: ${max}ms<br>
+                    📈 Velocità: ${(1000 / avg).toFixed(1)} PDF/secondo
+                `;
+
+                statusDiv.className = 'success-msg show';
+                statusDiv.innerHTML = '✅ Benchmark completato!';
+            } catch (error) {
+                console.error('Errore benchmark:', error);
+                statusDiv.className = 'error-msg show';
+                statusDiv.innerHTML = `❌ Errore durante il benchmark: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

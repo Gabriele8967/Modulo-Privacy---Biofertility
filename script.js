@@ -373,16 +373,84 @@ function showFieldError(field, message) {
     field.parentNode.appendChild(errorDiv);
 }
 
-// Generazione PDF
+// Helper per rendering righe tabella ottimizzato
+function renderTableRow(doc, yPos, margin, widths, data, isMerged = false) {
+    const rowHeight = 8;
+    const [col1W, col2W, col3W, col4W] = widths;
+
+    if (isMerged) {
+        doc.rect(margin, yPos, col1W, rowHeight);
+        doc.rect(margin + col1W, yPos, col2W + col3W + col4W, rowHeight);
+        doc.text(data[0], margin + 2, yPos + 6);
+        doc.text(data[1], margin + col1W + 2, yPos + 6);
+    } else {
+        doc.rect(margin, yPos, col1W, rowHeight);
+        doc.rect(margin + col1W, yPos, col2W, rowHeight);
+        doc.rect(margin + col1W + col2W, yPos, col3W, rowHeight);
+        doc.rect(margin + col1W + col2W + col3W, yPos, col4W, rowHeight);
+        doc.text(data[0], margin + 2, yPos + 6);
+        doc.text(data[1], margin + col1W + 2, yPos + 6);
+        if (data[2]) doc.text(data[2], margin + col1W + col2W + 2, yPos + 6);
+        if (data[3]) doc.text(data[3], margin + col1W + col2W + col3W + 2, yPos + 6);
+    }
+
+    return yPos + rowHeight;
+}
+
+// Cache per testi statici pre-processati
+const PDF_STATIC_TEXTS = {
+    infoPoints: null,
+    authenticityText: null,
+    noteText: null,
+    emailTemplate: null
+};
+
+// Pre-calcola splitTextToSize per testi statici (chiamato solo una volta)
+function initPDFStaticTexts(doc, contentWidth) {
+    if (PDF_STATIC_TEXTS.infoPoints) return; // Già inizializzato
+
+    const infoPointsRaw = [
+        'le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;',
+        'i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;',
+        'il diritto di accesso ai dati personali, la facoltà di chiederne l\'aggiornamento, la rettifica, l\'integrazione e la cancellazione e/o la limitazione nell\'utilizzo degli stessi;',
+        'il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;',
+        'la necessità di fornire dati richiesti per poter ottenere l\'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.'
+    ];
+
+    PDF_STATIC_TEXTS.infoPoints = infoPointsRaw.map(point =>
+        doc.splitTextToSize(`• ${point}`, contentWidth - 5)
+    );
+
+    PDF_STATIC_TEXTS.authenticityText = doc.splitTextToSize(
+        'Il presente documento è stato compilato digitalmente tramite interfaccia web sicura. I dati tecnici sopra riportati certificano l\'autenticità della compilazione e l\'identità del dispositivo utilizzato. Ai sensi dell\'art. 20 del CAD (Codice dell\'Amministrazione Digitale), il documento informatico soddisfa il requisito della forma scritta e ha l\'efficacia probatoria prevista dall\'art. 2712 del Codice Civile.',
+        contentWidth
+    );
+
+    PDF_STATIC_TEXTS.noteText = doc.splitTextToSize(
+        'NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.',
+        contentWidth
+    );
+
+    PDF_STATIC_TEXTS.emailTemplate = `A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail.
+
+Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
+}
+
+// Generazione PDF ottimizzata
 async function generatePDF(formData, userIP) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
-    
+
     const pageWidth = 210;
     const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
+    const rowHeight = 8;
+    const colWidths = [45, 60, 40, 45];
     let yPosition = 20;
-    
+
+    // Inizializza cache testi statici
+    initPDFStaticTexts(doc, contentWidth);
+
     // === INTESTAZIONE ===
     doc.setFontSize(16);
     doc.setFont('times', 'bold');
@@ -394,159 +462,64 @@ async function generatePDF(formData, userIP) {
     yPosition += 6;
     doc.text('BIOFERTILITY', pageWidth/2, yPosition, { align: 'center' });
     yPosition += 15;
-    
+
     // Linea separatrice
     doc.setLineWidth(0.5);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 10;
-    
+
     // === DATI PAZIENTE PRINCIPALE ===
     doc.setFontSize(14);
-    doc.setFont('times', 'bold');
     doc.text('DATI PAZIENTE PRINCIPALE', margin, yPosition);
     yPosition += 8;
-    
-    // Tabella dati paziente con bordi
-    const tableStartY = yPosition;
-    const rowHeight = 8;
-    const col1Width = 45;
-    const col2Width = 60;
-    const col3Width = 40;
-    const col4Width = 45;
-    
+
     // Header tabella
     doc.setFontSize(10);
-    doc.setFont('times', 'bold');
-    doc.rect(margin, yPosition, contentWidth, rowHeight);
-    doc.text('CAMPO', margin + 2, yPosition + 6);
-    doc.text('VALORE', margin + col1Width + 2, yPosition + 6);
-    doc.text('CAMPO', margin + col1Width + col2Width + 2, yPosition + 6);
-    doc.text('VALORE', margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths, ['CAMPO', 'VALORE', 'CAMPO', 'VALORE']);
+
+    // Righe dati paziente - batching font changes
     doc.setFont('times', 'normal');
-    
-    // Riga 1
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
-    
-    doc.text('Nome e Cognome', margin + 2, yPosition + 6);
-    doc.text(`${formData.nome} ${formData.cognome}`, margin + col1Width + 2, yPosition + 6);
-    doc.text('Data Nascita', margin + col1Width + col2Width + 2, yPosition + 6);
-    doc.text(formData.dataNascita, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 2
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
-    
-    doc.text('Luogo Nascita', margin + 2, yPosition + 6);
-    doc.text(formData.luogoNascita, margin + col1Width + 2, yPosition + 6);
-    doc.text('Professione', margin + col1Width + col2Width + 2, yPosition + 6);
-    doc.text(formData.professione, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 3 - Indirizzo completo
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
-    
-    doc.text('Indirizzo Completo', margin + 2, yPosition + 6);
-    doc.text(`${formData.indirizzo}, ${formData.citta} ${formData.cap}`, margin + col1Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 4
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
-    
-    doc.text('Codice Fiscale', margin + 2, yPosition + 6);
-    doc.text(formData.codiceFiscale, margin + col1Width + 2, yPosition + 6);
-    doc.text('Telefono', margin + col1Width + col2Width + 2, yPosition + 6);
-    doc.text(formData.telefono, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 5
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
-    doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
-    
-    doc.text('Documento N.', margin + 2, yPosition + 6);
-    doc.text(formData.numeroDocumento, margin + col1Width + 2, yPosition + 6);
-    doc.text('Scadenza', margin + col1Width + col2Width + 2, yPosition + 6);
-    doc.text(formData.scadenzaDocumento, margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 6 - Email
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
-    
-    doc.text('Email', margin + 2, yPosition + 6);
-    doc.text(formData.email, margin + col1Width + 2, yPosition + 6);
-    yPosition += rowHeight;
-    
-    // Riga 7 - Email Comunicazioni
-    doc.rect(margin, yPosition, col1Width, rowHeight);
-    doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
-    
-    doc.text('Email Comunicazioni', margin + 2, yPosition + 6);
-    doc.text(formData.emailComunicazioni, margin + col1Width + 2, yPosition + 6);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Nome e Cognome', `${formData.nome} ${formData.cognome}`, 'Data Nascita', formData.dataNascita]);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Luogo Nascita', formData.luogoNascita, 'Professione', formData.professione]);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Indirizzo Completo', `${formData.indirizzo}, ${formData.citta} ${formData.cap}`], true);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Codice Fiscale', formData.codiceFiscale, 'Telefono', formData.telefono]);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Documento N.', formData.numeroDocumento, 'Scadenza', formData.scadenzaDocumento]);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Email', formData.email], true);
+    yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+        ['Email Comunicazioni', formData.emailComunicazioni], true);
     yPosition += 15;
-    
+
     // === DATI PARTNER SE PRESENTI ===
     if (formData.includePartner && formData.nomePartner) {
         doc.setFontSize(14);
         doc.setFont('times', 'bold');
         doc.text('DATI PARTNER', margin, yPosition);
         yPosition += 8;
-        
-        doc.setFontSize(10);
-        doc.setFont('times', 'normal');
-        
+
         // Header tabella partner
-        doc.setFont('times', 'bold');
-        doc.rect(margin, yPosition, contentWidth, rowHeight);
-        doc.text('CAMPO', margin + 2, yPosition + 6);
-        doc.text('VALORE', margin + col1Width + 2, yPosition + 6);
-        doc.text('CAMPO', margin + col1Width + col2Width + 2, yPosition + 6);
-        doc.text('VALORE', margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-        yPosition += rowHeight;
-        
+        doc.setFontSize(10);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths, ['CAMPO', 'VALORE', 'CAMPO', 'VALORE']);
+
+        // Righe dati partner
         doc.setFont('times', 'normal');
-        
-        // Dati partner con stesso formato
-        const partnerData = [
-            ['Nome e Cognome', `${formData.nomePartner} ${formData.cognomePartner}`, 'Data Nascita', formData.dataNascitaPartner],
-            ['Luogo Nascita', formData.luogoNascitaPartner, 'Professione', formData.professionePartner],
-            ['Indirizzo', `${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner}`, '', ''],
-            ['Codice Fiscale', formData.codiceFiscalePartner, 'Telefono', formData.telefonoPartner],
-            ['Documento N.', formData.numeroDocumentoPartner, 'Scadenza', formData.scadenzaDocumentoPartner],
-            ['Email', formData.emailPartner, '', '']
-        ];
-        
-        partnerData.forEach(row => {
-            if (row[0] === 'Indirizzo' || row[0] === 'Email') {
-                doc.rect(margin, yPosition, col1Width, rowHeight);
-                doc.rect(margin + col1Width, yPosition, col2Width + col3Width + col4Width, rowHeight);
-                doc.text(row[0], margin + 2, yPosition + 6);
-                doc.text(row[1], margin + col1Width + 2, yPosition + 6);
-            } else {
-                doc.rect(margin, yPosition, col1Width, rowHeight);
-                doc.rect(margin + col1Width, yPosition, col2Width, rowHeight);
-                doc.rect(margin + col1Width + col2Width, yPosition, col3Width, rowHeight);
-                doc.rect(margin + col1Width + col2Width + col3Width, yPosition, col4Width, rowHeight);
-                doc.text(row[0], margin + 2, yPosition + 6);
-                doc.text(row[1], margin + col1Width + 2, yPosition + 6);
-                if (row[2]) doc.text(row[2], margin + col1Width + col2Width + 2, yPosition + 6);
-                if (row[3]) doc.text(row[3], margin + col1Width + col2Width + col3Width + 2, yPosition + 6);
-            }
-            yPosition += rowHeight;
-        });
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Nome e Cognome', `${formData.nomePartner} ${formData.cognomePartner}`, 'Data Nascita', formData.dataNascitaPartner]);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Luogo Nascita', formData.luogoNascitaPartner, 'Professione', formData.professionePartner]);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Indirizzo', `${formData.indirizzoPartner}, ${formData.cittaPartner} ${formData.capPartner}`], true);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Codice Fiscale', formData.codiceFiscalePartner, 'Telefono', formData.telefonoPartner]);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Documento N.', formData.numeroDocumentoPartner, 'Scadenza', formData.scadenzaDocumentoPartner]);
+        yPosition = renderTableRow(doc, yPosition, margin, colWidths,
+            ['Email', formData.emailPartner], true);
         yPosition += 10;
     }
     
@@ -555,115 +528,87 @@ async function generatePDF(formData, userIP) {
         doc.addPage();
         yPosition = 20;
     }
-    
+
     doc.setFontSize(12);
     doc.setFont('times', 'bold');
     doc.text('DICHIARAZIONE DI CONSENSO', margin, yPosition);
     yPosition += 10;
-    
+
     doc.setFontSize(11);
     doc.setFont('times', 'normal');
-    
+
     const consentTextFinal = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}${formData.includePartner ? ` e ${formData.nomePartner} ${formData.cognomePartner}` : ''}, pienamente consapevole della importanza della presente dichiarazione, dichiara di essere stato esaustivamente e chiaramente informato su:`;
-    
-    let consentLines = doc.splitTextToSize(consentTextFinal, contentWidth);
-    consentLines.forEach(line => {
+
+    const consentLines = doc.splitTextToSize(consentTextFinal, contentWidth);
+    for (const line of consentLines) {
         doc.text(line, margin, yPosition);
         yPosition += 6;
-    });
+    }
     yPosition += 5;
-    
-    // Elenco puntato informazioni
-    const infoPoints = [
-        'le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;',
-        'i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;',
-        'il diritto di accesso ai dati personali, la facoltà di chiederne l\'aggiornamento, la rettifica, l\'integrazione e la cancellazione e/o la limitazione nell\'utilizzo degli stessi;',
-        'il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;',
-        'la necessità di fornire dati richiesti per poter ottenere l\'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.'
-    ];
-    
-    infoPoints.forEach(point => {
-        const pointLines = doc.splitTextToSize(`• ${point}`, contentWidth - 5);
-        pointLines.forEach((line, index) => {
+
+    // Elenco puntato informazioni (usa cache pre-calcolata)
+    for (const pointLines of PDF_STATIC_TEXTS.infoPoints) {
+        for (let i = 0; i < pointLines.length; i++) {
             if (yPosition > 270) {
                 doc.addPage();
                 yPosition = 20;
             }
-            doc.text(line, margin + (index === 0 ? 0 : 5), yPosition);
+            doc.text(pointLines[i], margin + (i === 0 ? 0 : 5), yPosition);
             yPosition += 5;
-        });
+        }
         yPosition += 2;
-    });
-    
-    yPosition += 5;
-    
-    // Dichiarazione email
-    const emailDeclaration = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}
-    
-A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail.
+    }
 
-Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
-    
+    yPosition += 5;
+
+    // Dichiarazione email (usa template cached)
+    const emailDeclaration = `Il/La sottoscritto/a ${formData.nome} ${formData.cognome}, chiede che le comunicazioni, anche relative a referti, siano inviati all'indirizzo mail: ${formData.emailComunicazioni}\n    \n${PDF_STATIC_TEXTS.emailTemplate}`;
+
     const emailLines = doc.splitTextToSize(emailDeclaration, contentWidth);
-    emailLines.forEach(line => {
+    for (const line of emailLines) {
         if (yPosition > 270) {
             doc.addPage();
             yPosition = 20;
         }
         doc.text(line, margin, yPosition);
         yPosition += 5;
-    });
-    
+    }
+
     yPosition += 10;
-    
+
     // === FIRMA E DATA ===
     if (yPosition > 250) {
         doc.addPage();
         yPosition = 20;
     }
-    
+
     doc.setFont('times', 'bold');
     doc.text('Dr Claudio Manna', margin, yPosition);
     doc.setFont('times', 'normal');
     doc.text('Responsabile trattamento dei dati', margin, yPosition + 6);
     yPosition += 15;
-    
-    // Data
+
+    // Data e hash (batch calculations)
     const now = new Date();
     const timestamp = now.toLocaleString('it-IT', {
         day: '2-digit',
-        month: '2-digit', 
+        month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
-    
-    doc.setFont('times', 'bold');
-    doc.text(`Data: ${timestamp}`, margin, yPosition);
-    yPosition += 15;
-    
-    // === VALIDITÀ LEGALE DIGITALE ===
-    doc.setFontSize(10);
-    doc.setFont('times', 'bold');
-    doc.text('VALIDITÀ LEGALE DIGITALE', margin, yPosition);
-    yPosition += 6;
-    
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    
-    // Timestamp preciso con secondi
+
     const preciseTimestamp = now.toLocaleString('it-IT', {
         weekday: 'long',
         day: '2-digit',
-        month: 'long', 
+        month: 'long',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
         timeZoneName: 'short'
     });
-    
-    // Hash unico documento basato su contenuto + timestamp
+
     const documentHash = btoa(JSON.stringify({
         nome: formData.nome,
         cognome: formData.cognome,
@@ -671,61 +616,68 @@ Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento d
         timestamp: now.getTime(),
         ip: userIP
     })).substring(0, 16);
-    
-    // Geolocalizzazione approssimativa da IP (se disponibile)
-    const geoInfo = 'Italia'; // In produzione si può usare un servizio di geolocalizzazione
-    
-    doc.text(`Documento compilato il: ${preciseTimestamp}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`Indirizzo IP mittente: ${userIP} (${geoInfo})`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`User Agent: ${navigator.userAgent.substring(0, 80)}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`ID Univoco Documento: ${documentHash}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`Risoluzione Schermo: ${screen.width}x${screen.height}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`Piattaforma: ${navigator.platform}`, margin, yPosition);
-    yPosition += 4;
-    doc.text(`Lingua Browser: ${navigator.language}`, margin, yPosition);
+
+    doc.setFont('times', 'bold');
+    doc.text(`Data: ${timestamp}`, margin, yPosition);
+    yPosition += 15;
+
+    // === VALIDITÀ LEGALE DIGITALE ===
+    doc.setFontSize(10);
+    doc.text('VALIDITÀ LEGALE DIGITALE', margin, yPosition);
     yPosition += 6;
-    
-    // Dichiarazione di autenticità
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(9);
+
+    // Batch text rendering per info tecniche
+    const technicalInfo = [
+        `Documento compilato il: ${preciseTimestamp}`,
+        `Indirizzo IP mittente: ${userIP} (Italia)`,
+        `User Agent: ${navigator.userAgent.substring(0, 80)}`,
+        `ID Univoco Documento: ${documentHash}`,
+        `Risoluzione Schermo: ${screen.width}x${screen.height}`,
+        `Piattaforma: ${navigator.platform}`,
+        `Lingua Browser: ${navigator.language}`
+    ];
+
+    for (const info of technicalInfo) {
+        doc.text(info, margin, yPosition);
+        yPosition += 4;
+    }
+    yPosition += 2;
+
+    // Dichiarazione di autenticità (usa cache)
     doc.setFont('times', 'bold');
     doc.setFontSize(9);
     doc.text('DICHIARAZIONE DI AUTENTICITÀ DIGITALE', margin, yPosition);
     yPosition += 4;
+
     doc.setFont('times', 'normal');
     doc.setFontSize(8);
-    const authenticityText = 'Il presente documento è stato compilato digitalmente tramite interfaccia web sicura. I dati tecnici sopra riportati certificano l\'autenticità della compilazione e l\'identità del dispositivo utilizzato. Ai sensi dell\'art. 20 del CAD (Codice dell\'Amministrazione Digitale), il documento informatico soddisfa il requisito della forma scritta e ha l\'efficacia probatoria prevista dall\'art. 2712 del Codice Civile.';
-    const authLines = doc.splitTextToSize(authenticityText, contentWidth);
-    authLines.forEach(line => {
+    for (const line of PDF_STATIC_TEXTS.authenticityText) {
         doc.text(line, margin, yPosition);
         yPosition += 3.5;
-    });
+    }
     yPosition += 4;
-    
-    // Note legali
+
+    // Note legali (usa cache)
     doc.setFont('times', 'italic');
-    doc.setFontSize(8);
-    const noteText = 'NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.';
-    const noteLines = doc.splitTextToSize(noteText, contentWidth);
-    noteLines.forEach(line => {
+    for (const line of PDF_STATIC_TEXTS.noteText) {
         doc.text(line, margin, yPosition);
         yPosition += 4;
-    });
+    }
     yPosition += 8;
-    
+
     // === FOOTER CENTRO ===
     doc.setLineWidth(0.3);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 6;
-    
+
     doc.setFontSize(11);
     doc.setFont('times', 'bold');
     doc.text('Centro Biofertility - Junior s.r.l.', margin, yPosition);
     yPosition += 6;
-    
+
     doc.setFont('times', 'normal');
     doc.setFontSize(9);
     doc.text('Sede operativa: Viale degli Eroi di Rodi 214, 00128-Roma', margin, yPosition);
@@ -733,7 +685,7 @@ Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento d
     doc.text('Tel: 06-5083375 | Fax: 06-5083375 | E-mail: centrimanna2@gmail.com', margin, yPosition);
     yPosition += 4;
     doc.text('Sede legale: Via Velletri 7, 00198 Roma | Tel: 06-8415269', margin, yPosition);
-    
+
     return doc;
 }
 
@@ -818,13 +770,15 @@ document.getElementById('privacyForm').addEventListener('submit', async function
             userAgent: navigator.userAgent
         };
         
-        // Funzione con retry logic e timeout
+        // Funzione con retry logic e timeout intelligente
         async function sendWithRetry(data, maxRetries = 3) {
+            let lastError = null;
+
             for (let attempt = 1; attempt <= maxRetries; attempt++) {
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondi timeout
-                    
+
                     const response = await fetch('/.netlify/functions/send-email', {
                         method: 'POST',
                         headers: {
@@ -833,17 +787,31 @@ document.getElementById('privacyForm').addEventListener('submit', async function
                         body: JSON.stringify(data),
                         signal: controller.signal
                     });
-                    
+
                     clearTimeout(timeoutId);
-                    
+
                     if (response.ok) {
                         const result = await response.json();
                         return { success: true, data: result };
                     } else {
                         const errorData = await response.text();
+
+                        // Se è 404, non ha senso ritentare (endpoint non esiste)
+                        if (response.status === 404) {
+                            DebugLogger.error('Endpoint non trovato (404) - stop retry');
+                            return {
+                                success: false,
+                                error: 'ENDPOINT_NOT_FOUND',
+                                httpStatus: 404,
+                                noRetry: true
+                            };
+                        }
+
                         throw new Error(`HTTP ${response.status}: ${errorData}`);
                     }
                 } catch (error) {
+                    lastError = error;
+
                     DebugLogger.error(`Tentativo ${attempt}/${maxRetries} fallito`, {
                         attempt,
                         maxRetries,
@@ -852,22 +820,36 @@ document.getElementById('privacyForm').addEventListener('submit', async function
                         isTimeout: error.name === 'AbortError',
                         isNetwork: error.message.includes('fetch')
                     });
-                    
+
+                    // Non ritentare se è un errore 404 o errore di rete critico
+                    if (error.message.includes('404') || error.message.includes('ENDPOINT_NOT_FOUND')) {
+                        return {
+                            success: false,
+                            error: 'ENDPOINT_NOT_FOUND',
+                            noRetry: true
+                        };
+                    }
+
                     if (attempt === maxRetries) {
-                        return { 
-                            success: false, 
+                        return {
+                            success: false,
                             error: error.message,
                             isTimeout: error.name === 'AbortError',
                             isNetwork: error.message.includes('fetch')
                         };
                     }
-                    
-                    // Attesa progressiva tra i tentativi
+
+                    // Attesa progressiva tra i tentativi (solo se ha senso ritentare)
                     const waitTime = attempt * 2000;
                     DebugLogger.info(`Attesa ${waitTime}ms prima del prossimo tentativo`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                 }
             }
+
+            return {
+                success: false,
+                error: lastError?.message || 'Errore sconosciuto'
+            };
         }
         
         const result = await sendWithRetry(functionData);
@@ -889,46 +871,108 @@ document.getElementById('privacyForm').addEventListener('submit', async function
         
     } catch (error) {
         console.error('Errore nell\'invio:', error);
-        
-        // Messaggi semplici per utenti non tecnici
-        let errorMessage = `Non riesco a inviare il modulo.\n\n`;
-        
-        if (error.message.includes('AbortError') || error.message.includes('timeout')) {
-            errorMessage += `La connessione è lenta.\n\nCosa fare:\n• Controlla la tua connessione internet\n• Riprova tra qualche minuto\n\n`;
-        } else if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
-            errorMessage += `Problema di connessione.\n\nCosa fare:\n• Controlla la connessione internet\n• Prova con WiFi o dati mobili\n• Riprova tra qualche minuto\n\n`;
-        } else if (error.message.includes('500')) {
-            errorMessage += `Il servizio è temporaneamente non disponibile.\n\nCosa fare:\n• Riprova tra 2-3 minuti\n• Il problema si risolverà automaticamente\n\n`;
-        } else if (error.message.includes('blocked') || error.message.includes('CORS')) {
-            errorMessage += `Qualcosa sta bloccando l'invio.\n\nCosa fare:\n• Prova con un browser diverso (Chrome, Firefox)\n• Controlla se hai bloccatori di pubblicità attivi\n\n`;
-        } else {
-            errorMessage += `Si è verificato un problema.\n\nCosa fare:\n• Controlla che tutti i campi siano compilati\n• Verifica che le foto siano piccole (max 5MB)\n• Riprova tra qualche minuto\n\n`;
-        }
-        
-        errorMessage += `Per assistenza chiama: 06-5083375\nOppure scrivi a: centrimanna2@gmail.com\n\nI tuoi dati sono al sicuro e non si perderanno.`;
-        
+
         // Log dettagliato per debug (invisibile all'utente)
         DebugLogger.error('Errore finale invio modulo', {
             error: error.message,
             stack: error.stack,
-            formData: data,
-            userIP,
             timestamp: new Date().toISOString()
         });
-        
-        // Suggerimenti automatici basati sul tipo di errore
-        let automaticSuggestion = '';
-        if (error.message.includes('AbortError')) {
-            automaticSuggestion = '\n\nProvo a migliorare la connessione automaticamente...';
-            // Riduci timeout per prossimi tentativi
-            setTimeout(() => {
-                alert('Ora prova di nuovo - ho ottimizzato la connessione.');
-            }, 2000);
-        } else if (error.message.includes('blocked')) {
-            automaticSuggestion = '\n\nSuggerimento: Prova a ricaricare la pagina (F5) e ricompila il modulo.';
+
+        // Messaggi SEMPLICI per pazienti (no termini tecnici)
+        let errorMessage = '';
+        let errorTitle = '⚠️ NON È STATO POSSIBILE INVIARE';
+
+        // Determina il tipo di errore e mostra messaggio appropriato
+        if (error.message.includes('ENDPOINT_NOT_FOUND') || error.message.includes('404')) {
+            // Errore 404 - probabilmente test locale
+            errorTitle = '⚠️ ATTENZIONE';
+            errorMessage = `Il modulo non può essere inviato da questa pagina.
+
+COSA DEVI FARE:
+1. Assicurati di usare il link ufficiale che ti è stato dato dal centro
+2. Se stai facendo una prova, questa pagina è solo per TEST
+3. Per inviare davvero il modulo, usa il link: https://tuosito.netlify.app
+
+SERVE AIUTO?
+📞 Chiama il centro: 06-5083375
+📧 Email: centrimanna2@gmail.com
+
+I tuoi dati NON sono stati inviati.
+Compila il modulo dal link ufficiale.`;
+
+        } else if (error.message.includes('AbortError') || error.message.includes('timeout')) {
+            // Timeout
+            errorMessage = `La connessione internet è troppo lenta.
+
+COSA FARE:
+1. Controlla di essere connesso a internet
+2. Prova a connetterti al WiFi (se sei su dati mobili)
+3. Aspetta 1 minuto e clicca di nuovo INVIA
+
+SERVE AIUTO?
+📞 Chiama il centro: 06-5083375
+Possono aiutarti a compilare il modulo per telefono.
+
+I tuoi dati sono SICURI e non si perdono.`;
+
+        } else if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+            // Errore di rete
+            errorMessage = `Non c'è connessione a internet.
+
+COSA FARE:
+1. Controlla di essere connesso a WiFi o dati mobili
+2. Prova a disattivare e riattivare il WiFi
+3. Riprova tra 1 minuto
+
+SE IL PROBLEMA CONTINUA:
+📞 Chiama il centro: 06-5083375
+Ti aiuteranno a completare il modulo.
+
+I tuoi dati sono SICURI.`;
+
+        } else if (error.message.includes('500') || error.message.includes('503')) {
+            // Errore server
+            errorMessage = `Il sistema è momentaneamente occupato.
+
+COSA FARE:
+1. Aspetta 2-3 minuti
+2. Clicca di nuovo INVIA
+3. Se non funziona, riprova tra 10 minuti
+
+È UN PROBLEMA TEMPORANEO:
+Il sistema si risolverà da solo.
+Non c'è niente che tu debba fare.
+
+FRETTA?
+📞 Chiama: 06-5083375
+
+I tuoi dati sono SICURI.`;
+
+        } else {
+            // Errore generico
+            errorMessage = `Si è verificato un problema tecnico.
+
+COSA CONTROLLARE:
+1. Tutti i campi sono compilati?
+2. Le foto sono più piccole di 5MB?
+3. Hai compilato email e telefono?
+
+COSA FARE:
+1. Controlla i punti sopra
+2. Clicca di nuovo INVIA
+3. Se non funziona, chiama il centro
+
+SERVE AIUTO?
+📞 Chiama: 06-5083375
+📧 Email: centrimanna2@gmail.com
+
+I tuoi dati sono SICURI.`;
         }
-        
-        alert(errorMessage + automaticSuggestion);
+
+        // Mostra messaggio con alert semplice
+        alert(errorTitle + '\n\n' + errorMessage);
+
         loading.style.display = 'none';
     } finally {
         submitBtn.disabled = false;

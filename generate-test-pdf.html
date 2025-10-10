@@ -1,16 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test PDF Generator</title>
+    <title>Test PDF Generator - Ottimizzato</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        button { padding: 12px 24px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #status { margin-top: 20px; padding: 15px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        #benchmark { margin-top: 10px; font-family: monospace; font-size: 14px; }
+    </style>
 </head>
 <body>
-    <h1>Generatore PDF Test</h1>
+    <h1>🚀 Generatore PDF Test - Versione Ottimizzata</h1>
     <button onclick="generateTestPDF()">Genera PDF Test</button>
+    <button onclick="benchmarkPDF()" style="margin-left: 10px; background: #28a745;">Benchmark Performance</button>
     <div id="status"></div>
+    <div id="benchmark"></div>
 
     <script>
-        // Copia della funzione PDF aggiornata
+        // Helper per rendering righe tabella ottimizzato
+        function renderTableRow(doc, yPos, margin, widths, data, isMerged = false) {
+            const rowHeight = 8;
+            const [col1W, col2W, col3W, col4W] = widths;
+
+            if (isMerged) {
+                doc.rect(margin, yPos, col1W, rowHeight);
+                doc.rect(margin + col1W, yPos, col2W + col3W + col4W, rowHeight);
+                doc.text(data[0], margin + 2, yPos + 6);
+                doc.text(data[1], margin + col1W + 2, yPos + 6);
+            } else {
+                doc.rect(margin, yPos, col1W, rowHeight);
+                doc.rect(margin + col1W, yPos, col2W, rowHeight);
+                doc.rect(margin + col1W + col2W, yPos, col3W, rowHeight);
+                doc.rect(margin + col1W + col2W + col3W, yPos, col4W, rowHeight);
+                doc.text(data[0], margin + 2, yPos + 6);
+                doc.text(data[1], margin + col1W + 2, yPos + 6);
+                if (data[2]) doc.text(data[2], margin + col1W + col2W + 2, yPos + 6);
+                if (data[3]) doc.text(data[3], margin + col1W + col2W + col3W + 2, yPos + 6);
+            }
+
+            return yPos + rowHeight;
+        }
+
+        // Cache per testi statici pre-processati
+        const PDF_STATIC_TEXTS = {
+            infoPoints: null,
+            authenticityText: null,
+            noteText: null,
+            emailTemplate: null
+        };
+
+        // Pre-calcola splitTextToSize per testi statici
+        function initPDFStaticTexts(doc, contentWidth) {
+            if (PDF_STATIC_TEXTS.infoPoints) return;
+
+            const infoPointsRaw = [
+                'le finalità e le modalità del trattamento cui sono destinati i dati, connesse con le attività di prevenzione, diagnosi, cura e riabilitazione, svolte dal medico a tutela della salute;',
+                'i soggetti o le categorie di soggetti ai quali i dati personali possono essere comunicati (medici sostituti, laboratorio analisi, medici specialisti, aziende ospedaliere, case di cura private e fiscalisti, ministero Finanze, Enti pubblici quali INPS, Inail ecc.) o che possono venirne a conoscenza in qualità di incaricati;',
+                'il diritto di accesso ai dati personali, la facoltà di chiederne l\'aggiornamento, la rettifica, l\'integrazione e la cancellazione e/o la limitazione nell\'utilizzo degli stessi;',
+                'il nome del medico titolare del trattamento dei dati personali ed i suoi dati di contatto;',
+                'la necessità di fornire dati richiesti per poter ottenere l\'erogazione di prestazioni mediche adeguate e la fruizione dei servizi sanitari secondo la attuale disciplina.'
+            ];
+
+            PDF_STATIC_TEXTS.infoPoints = infoPointsRaw.map(point =>
+                doc.splitTextToSize(`• ${point}`, contentWidth - 5)
+            );
+
+            PDF_STATIC_TEXTS.authenticityText = doc.splitTextToSize(
+                'Il presente documento è stato compilato digitalmente tramite interfaccia web sicura. I dati tecnici sopra riportati certificano l\'autenticità della compilazione e l\'identità del dispositivo utilizzato. Ai sensi dell\'art. 20 del CAD (Codice dell\'Amministrazione Digitale), il documento informatico soddisfa il requisito della forma scritta e ha l\'efficacia probatoria prevista dall\'art. 2712 del Codice Civile.',
+                contentWidth
+            );
+
+            PDF_STATIC_TEXTS.noteText = doc.splitTextToSize(
+                'NOTE: la responsabilità della eliminazione delle copie obsolete dell\'istruzione è del destinatario di questa documentazione.',
+                contentWidth
+            );
+
+            PDF_STATIC_TEXTS.emailTemplate = `A tal proposito, dichiaro che il detto indirizzo e-mail appartiene alla mia persona ed è in mio esclusivo utilizzo esonerando la Junior srl, da ogni e qualsivoglia responsabilità in riferimento alla conoscenza che dei referti e/o informazioni sul mio stato di salute, possano avere terze persone che riescano ad accedere lecitamente od illecitamente al detto indirizzo mail.
+
+Il sottoscritto esprime quindi il libero e consapevole consenso al trattamento dei dati personali e sensibili, esclusivamente a fini di prevenzione, diagnosi, cura, esecuzione delle tecniche di PMA, prescrizione farmaceutica, interventi ambulatoriali e chirurgici e visita specialistica e per ogni prestazione da me richiesta.`;
+        }
+
+        // Versione OTTIMIZZATA
         async function generatePDF(formData, userIP) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
